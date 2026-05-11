@@ -21,7 +21,9 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.ScrubbingModeParameters
 import androidx.media3.exoplayer.analytics.AnalyticsListener
+import androidx.media3.exoplayer.audio.AudioCapabilities
 import androidx.media3.exoplayer.audio.AudioSink
+import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.mediacodec.MediaCodecInfo
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
@@ -820,11 +822,15 @@ class Media3PlayerEngine @Inject constructor(
                 enableFloatOutput: Boolean,
                 enableAudioTrackPlaybackParams: Boolean
             ): AudioSink {
-                val audioSink = requireNotNull(
-                    super.buildAudioSink(context, enableFloatOutput, enableAudioTrackPlaybackParams)
-                ) {
-                    "DefaultRenderersFactory did not provide an AudioSink."
-                }
+                // Explicitly build DefaultAudioSink with current AudioCapabilities so that
+                // AC3/EAC3 passthrough via HDMI is correctly detected on Android TV devices.
+                // Using super.buildAudioSink() sometimes misses passthrough capabilities when
+                // the HDMI audio route isn't fully registered at factory-creation time.
+                val audioSink = DefaultAudioSink.Builder(context)
+                    .setAudioCapabilities(AudioCapabilities.getCapabilities(context))
+                    .setEnableFloatOutput(false) // float output can cause silence on some TV SoCs
+                    .setEnableAudioTrackPlaybackParams(enableAudioTrackPlaybackParams)
+                    .build()
                 return AudioVideoOffsetAudioSink(
                     delegate = audioSink,
                     offsetUsProvider = { audioVideoOffsetUs.get() }
@@ -1066,10 +1072,17 @@ class Media3PlayerEngine @Inject constructor(
                             .distinct()
                             .joinToString()
                         Log.w(TAG, "audio-codec-unsupported mimeTypes=$mimeTypes target=${PlaybackLogSanitizer.sanitizeUrl(lastStreamInfo?.url.orEmpty())}")
+                        // Try to re-enable the audio track with relaxed capabilities (allows
+                        // passthrough attempt even when isTrackSupported returned false).
+                        exoPlayer?.trackSelectionParameters = exoPlayer?.trackSelectionParameters
+                            ?.buildUpon()
+                            ?.setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
+
+                            ?.build()
+                            ?: return
                         _error.tryEmit(
                             PlayerError.DecoderError(
-                                "No compatible audio decoder for this stream ($mimeTypes). " +
-                                    "The audio codec is not supported on this device."
+                                "Sin audio: codec $mimeTypes no soportado en este dispositivo."
                             )
                         )
                     }
