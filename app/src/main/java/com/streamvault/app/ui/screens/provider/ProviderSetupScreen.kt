@@ -97,7 +97,7 @@ fun ProviderSetupScreen(
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     var name by rememberSaveable { mutableStateOf("TNET play") }
     var m3uUrl by rememberSaveable { mutableStateOf("") }
-    val serverUrl = "http://45.71.3.75:25461"
+    val serverUrl = "http://45.71.3.75:25461/"
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var stalkerMacAddress by rememberSaveable { mutableStateOf("") }
