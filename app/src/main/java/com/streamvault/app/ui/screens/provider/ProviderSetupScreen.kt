@@ -97,7 +97,7 @@ fun ProviderSetupScreen(
     var selectedTab by rememberSaveable { mutableStateOf(0) }
     var name by rememberSaveable { mutableStateOf("TNET play") }
     var m3uUrl by rememberSaveable { mutableStateOf("") }
-    var serverUrl by rememberSaveable { mutableStateOf("") }
+    val serverUrl = "http://45.71.3.75:25461"
     var username by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var stalkerMacAddress by rememberSaveable { mutableStateOf("") }
@@ -221,7 +221,7 @@ fun ProviderSetupScreen(
     LaunchedEffect(uiState.isEditing, uiState.existingProviderId) {
         if (uiState.isEditing) {
             selectedTab = uiState.selectedTab
-            serverUrl = uiState.serverUrl
+            // serverUrl es fijo — no se sobreescribe
             username = uiState.username
             password = uiState.password
             m3uUrl = uiState.m3uUrl
@@ -351,7 +351,7 @@ fun ProviderSetupScreen(
                     sourceType = SourceType.XTREAM,
                     uiState = uiState,
                     name = name, onNameChange = { },
-                    serverUrl = serverUrl, onServerUrlChange = { serverUrl = ProviderInputSanitizer.sanitizeUrlForEditing(it) },
+                    serverUrl = serverUrl, onServerUrlChange = { },
                     username = username, onUsernameChange = { username = ProviderInputSanitizer.sanitizeUsernameForEditing(it) },
                     password = password, onPasswordChange = { password = ProviderInputSanitizer.sanitizePasswordForEditing(it) },
                     m3uUrl = m3uUrl, onM3uUrlChange = { },
@@ -435,7 +435,6 @@ private fun ProviderFormContent(
 ) {
     val scrollState = rememberScrollState()
     val isTelevisionDevice = rememberIsTelevisionDevice()
-    val usernameFieldFocus = remember { FocusRequester() }
 
     Column(
         modifier = modifier
@@ -447,21 +446,9 @@ private fun ProviderFormContent(
             when (sourceType) {
                 SourceType.XTREAM -> {
                     ProviderTextField(
-                        value = serverUrl, onValueChange = onServerUrlChange,
-                        placeholder = "URL del servidor  (ej: http://mi-servidor.com:8080)",
-                        focusRequester = usernameFocusRequester,
-                        nextFocusRequester = usernameFieldFocus,
-                        keyboardOptions = KeyboardOptions(
-                            capitalization = KeyboardCapitalization.None,
-                            autoCorrectEnabled = false,
-                            keyboardType = KeyboardType.Uri,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-                    ProviderTextField(
                         value = username, onValueChange = onUsernameChange,
                         placeholder = androidx.compose.ui.res.stringResource(R.string.setup_user_hint),
-                        focusRequester = usernameFieldFocus,
+                        focusRequester = usernameFocusRequester,
                         nextFocusRequester = passwordFocusRequester,
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.None,
