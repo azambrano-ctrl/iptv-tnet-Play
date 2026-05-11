@@ -10,6 +10,7 @@ import android.os.StrictMode
 import android.util.Rational
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
 import com.streamvault.app.cast.CastManager
 import com.streamvault.app.cast.CastRouteChooserActivity
@@ -21,7 +22,7 @@ import com.streamvault.app.navigation.PlayerNavigationRequest
 import com.streamvault.app.tv.LauncherRecommendationsManager
 import com.streamvault.app.tv.WatchNextManager
 import com.streamvault.app.tvinput.TvInputChannelSyncManager
-import com.streamvault.app.ui.theme.StreamVaultTheme
+import com.streamvault.app.ui.theme.TnetPlayTheme
 import com.streamvault.app.ui.time.LocalAppTimeFormat
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -91,6 +92,7 @@ class MainActivity : ComponentActivity() {
     private var playerPictureInPictureState = PlayerPictureInPictureState()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        installSplashScreen()
         if (BuildConfig.DEBUG) {
             StrictMode.setThreadPolicy(
                 StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().build()
@@ -157,7 +159,7 @@ class MainActivity : ComponentActivity() {
                 LocalLayoutDirection provides layoutDirection,
                 LocalAppTimeFormat provides appTimeFormat
             ) {
-                StreamVaultTheme {
+                TnetPlayTheme {
                     AppNavigation(mainActivity = this@MainActivity)
                 }
             }

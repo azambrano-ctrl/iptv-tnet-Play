@@ -185,7 +185,7 @@ fun BrowseSearchLaunchCard(
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
                 shape = RoundedCornerShape(22.dp)
             )
         )
@@ -231,7 +231,7 @@ fun BrowseHeroPanel(
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
                 shape = RoundedCornerShape(28.dp)
             )
         )

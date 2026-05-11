@@ -934,6 +934,12 @@ internal fun ClickableSettingsRow(
             containerColor = Color.Transparent,
             focusedContainerColor = if (enabled) Primary.copy(alpha = 0.15f) else Color.Transparent
         ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = BorderStroke(2.dp, if (enabled) FocusBorder else Color.Transparent),
+                shape = RoundedCornerShape(8.dp)
+            )
+        ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         modifier = Modifier
             .fillMaxWidth()
@@ -1172,6 +1178,12 @@ internal fun SettingsNavItem(
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (isSelected) Primary.copy(alpha = 0.11f) else Color.Transparent,
             focusedContainerColor = Primary.copy(alpha = 0.22f)
+        ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = BorderStroke(3.dp, FocusBorder),
+                shape = RoundedCornerShape(0.dp)
+            )
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         modifier = modifier

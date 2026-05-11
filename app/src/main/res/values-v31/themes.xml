@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31+): Override directo de atributos de splash screen de plataforma -->
+<resources>
+    <style name="Theme.StreamVault.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0A0A0A</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="windowSplashScreenIconBackgroundColor">#00000000</item>
+        <item name="postSplashScreenTheme">@style/Theme.StreamVault</item>
+        <!-- Atributo directo de plataforma Android 12+ -->
+        <item name="android:windowSplashScreenBackground">#0A0A0A</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="android:windowSplashScreenIconBackgroundColor">#00000000</item>
+    </style>
+</resources>

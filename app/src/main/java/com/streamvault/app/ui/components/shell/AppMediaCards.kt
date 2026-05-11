@@ -295,7 +295,7 @@ fun LiveChannelRowSurface(
             focusedBorder = Border(
                 border = BorderStroke(
                     width = if (isDragging) 4.dp else FocusSpec.BorderWidth,
-                    color = if (isDragging) AppColors.Warning else AppColors.Focus
+                    color = if (isDragging) AppColors.Warning else AppColors.FocusBorder
                 ),
                 shape = RoundedCornerShape(16.dp)
             )

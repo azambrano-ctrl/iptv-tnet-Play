@@ -1,5 +1,9 @@
 package com.streamvault.app.ui.screens.welcome
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,31 +11,30 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.LaunchedEffect
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.collectAsState
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.tv.material3.MaterialTheme
-import androidx.tv.material3.Surface
-import androidx.tv.material3.SurfaceDefaults
 import androidx.tv.material3.Text
 import com.streamvault.app.R
-import com.streamvault.app.ui.components.shell.StatusPill
 import com.streamvault.app.ui.design.AppColors
 import com.streamvault.domain.repository.ProviderRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -67,59 +70,107 @@ fun WelcomeScreen(
 ) {
     val hasProviders by viewModel.hasProviders.collectAsStateWithLifecycle()
 
+    // Animaciones
+    val scale = remember { Animatable(0.6f) }
+    val alpha = remember { Animatable(0f) }
+    val glowAlpha = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        // Fade in + scale up del logo
+        launch {
+            scale.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 700, easing = FastOutSlowInEasing)
+            )
+        }
+        launch {
+            alpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 600, easing = FastOutSlowInEasing)
+            )
+        }
+        // Glow aparece un poco despues
+        launch {
+            kotlinx.coroutines.delay(200)
+            glowAlpha.animateTo(
+                targetValue = 1f,
+                animationSpec = tween(durationMillis = 800)
+            )
+        }
+    }
+
     LaunchedEffect(hasProviders) {
         when (hasProviders) {
-            true -> onNavigateToHome()
-            false -> onNavigateToSetup()
+            true -> {
+                kotlinx.coroutines.delay(1800)
+                onNavigateToHome()
+            }
+            false -> {
+                kotlinx.coroutines.delay(1800)
+                onNavigateToSetup()
+            }
             null -> Unit
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        // Glow de fondo animado
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .alpha(glowAlpha.value)
                 .background(
-                    Brush.verticalGradient(
+                    Brush.radialGradient(
                         colors = listOf(
-                            Color.Black.copy(alpha = 0.22f),
-                            AppColors.HeroTop,
-                            AppColors.HeroBottom
-                        )
+                            Color(0x44FF4500),
+                            Color(0x22E8001C),
+                            Color.Transparent
+                        ),
+                        radius = 800f
                     )
                 )
         )
 
-        Surface(
+        Column(
             modifier = Modifier
                 .align(Alignment.Center)
                 .padding(32.dp),
-            shape = RoundedCornerShape(28.dp),
-            colors = SurfaceDefaults.colors(containerColor = AppColors.Surface.copy(alpha = 0.9f))
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(horizontal = 36.dp, vertical = 28.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                StatusPill(
-                    label = stringResource(R.string.app_name),
-                    containerColor = AppColors.BrandMuted
-                )
-                Spacer(modifier = Modifier.height(18.dp))
-                CircularProgressIndicator(color = AppColors.Brand)
-                Spacer(modifier = Modifier.height(18.dp))
-                Text(
-                    text = stringResource(R.string.welcome_loading_title),
-                    style = MaterialTheme.typography.titleLarge,
-                    color = AppColors.TextPrimary
-                )
-                Spacer(modifier = Modifier.height(6.dp))
-                Text(
-                    text = stringResource(R.string.welcome_loading_subtitle),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = AppColors.TextSecondary
-                )
-            }
+            // Logo con animacion de escala y fade
+            Image(
+                painter = painterResource(id = R.drawable.tnet_logo),
+                contentDescription = "TNET play",
+                modifier = Modifier
+                    .width(300.dp)
+                    .height(130.dp)
+                    .scale(scale.value)
+                    .alpha(alpha.value),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(56.dp))
+
+            CircularProgressIndicator(
+                color = AppColors.Brand,
+                modifier = Modifier
+                    .size(28.dp)
+                    .alpha(alpha.value),
+                strokeWidth = 2.5.dp
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.welcome_loading_title),
+                style = MaterialTheme.typography.bodyMedium,
+                color = AppColors.TextTertiary,
+                modifier = Modifier.alpha(alpha.value)
+            )
         }
     }
 }

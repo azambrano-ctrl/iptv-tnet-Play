@@ -12,7 +12,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.streamvault.app.navigation.Routes
 import com.streamvault.app.ui.test.assertAgainstGolden
-import com.streamvault.app.ui.theme.StreamVaultTheme
+import com.streamvault.app.ui.theme.TnetPlayTheme
 import com.streamvault.domain.model.Channel
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +27,7 @@ class ShellGoldenTest {
     @Test
     fun browseHeroPanel_matchesGolden() {
         composeRule.setContent {
-            StreamVaultTheme {
+            TnetPlayTheme {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -52,7 +52,7 @@ class ShellGoldenTest {
     @Test
     fun liveChannelRowSurface_matchesGolden() {
         composeRule.setContent {
-            StreamVaultTheme {
+            TnetPlayTheme {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -81,7 +81,7 @@ class ShellGoldenTest {
     fun appScreenScaffold_rtl_matchesGolden() {
         composeRule.setContent {
             CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
-                StreamVaultTheme {
+                TnetPlayTheme {
                     AppScreenScaffold(
                         currentRoute = Routes.EPG,
                         onNavigate = {},

@@ -472,7 +472,7 @@ fun SeasonChip(
                 shape = RoundedCornerShape(999.dp)
             ),
             focusedBorder = Border(
-                border = androidx.compose.foundation.BorderStroke(2.dp, AppColors.Focus),
+                border = androidx.compose.foundation.BorderStroke(2.dp, AppColors.FocusBorder),
                 shape = RoundedCornerShape(999.dp)
             )
         )

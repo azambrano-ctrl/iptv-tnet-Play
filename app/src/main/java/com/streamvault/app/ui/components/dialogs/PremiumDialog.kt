@@ -223,7 +223,7 @@ fun PremiumDialogActionButton(
         ),
         border = ButtonDefaults.border(
             focusedBorder = androidx.tv.material3.Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus)
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder)
             )
         ),
         scale = ButtonDefaults.scale(focusedScale = FocusSpec.FocusedScale)
@@ -265,7 +265,7 @@ fun PremiumDialogFooterButton(
         ),
         border = ButtonDefaults.border(
             focusedBorder = androidx.tv.material3.Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus)
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder)
             )
         ),
         scale = ButtonDefaults.scale(focusedScale = FocusSpec.FocusedScale)

@@ -84,7 +84,7 @@ fun VodClassicSplitLayout(
                     ),
                     border = ClickableSurfaceDefaults.border(
                         focusedBorder = Border(
-                            border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                            border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
                             shape = RoundedCornerShape(14.dp)
                         )
                     ),
@@ -205,7 +205,7 @@ private fun VodClassicHeaderActionButton(
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
                 shape = RoundedCornerShape(18.dp)
             )
         ),

@@ -275,7 +275,7 @@ fun SettingsScreen(
     var showRecordingBrowserDialog by rememberSaveable { mutableStateOf(false) }
     var selectedRecordingId by rememberSaveable { mutableStateOf<String?>(null) }
     var categorySortDialogType by rememberSaveable { mutableStateOf<String?>(null) }
-    var selectedCategory by rememberSaveable { mutableStateOf(0) }
+    var selectedCategory by rememberSaveable { mutableStateOf(1) }
     var pinError by rememberSaveable { mutableStateOf<String?>(null) }
     var pendingAction by remember { mutableStateOf<ParentalAction?>(null) }
     var pendingProtectionLevel by rememberSaveable { mutableStateOf<Int?>(null) }
@@ -331,6 +331,15 @@ fun SettingsScreen(
         settingsNavFocusRequester.requestFocusSafely(tag = "SettingsScreen", target = "Selected settings section")
     }
 
+    // Cuando se cierra sesion (lista de proveedores vacia), ir al setup
+    var hadProviders by rememberSaveable { mutableStateOf(uiState.providers.isNotEmpty()) }
+    LaunchedEffect(uiState.providers) {
+        if (hadProviders && uiState.providers.isEmpty()) {
+            onAddProvider()
+        }
+        if (uiState.providers.isNotEmpty()) hadProviders = true
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         AppScreenScaffold(
             currentRoute = currentRoute,
@@ -351,15 +360,6 @@ fun SettingsScreen(
                     contentPadding = PaddingValues(top = 76.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    item {
-                        SettingsNavItem(
-                            stringResource(R.string.settings_providers),
-                            "P",
-                            Primary,
-                            selectedCategory == 0,
-                            modifier = if (selectedCategory == 0) Modifier.focusRequester(settingsNavFocusRequester) else Modifier
-                        ) { selectedCategory = 0 }
-                    }
                     item {
                         SettingsNavItem(
                             stringResource(R.string.settings_playback),
@@ -398,30 +398,50 @@ fun SettingsScreen(
                     }
                     item {
                         SettingsNavItem(
-                            stringResource(R.string.settings_backup_restore),
-                            "B",
-                            Color(0xFF42A5F5),
-                            selectedCategory == 5,
-                            modifier = if (selectedCategory == 5) Modifier.focusRequester(settingsNavFocusRequester) else Modifier
-                        ) { selectedCategory = 5 }
-                    }
-                    item {
-                        SettingsNavItem(
-                            "EPG Sources",
-                            "E",
-                            Color(0xFF66BB6A),
-                            selectedCategory == 6,
-                            modifier = if (selectedCategory == 6) Modifier.focusRequester(settingsNavFocusRequester) else Modifier
-                        ) { selectedCategory = 6 }
-                    }
-                    item {
-                        SettingsNavItem(
                             stringResource(R.string.settings_about),
                             "i",
                             Color(0xFF78909C),
                             selectedCategory == 7,
                             modifier = if (selectedCategory == 7) Modifier.focusRequester(settingsNavFocusRequester) else Modifier
                         ) { selectedCategory = 7 }
+                    }
+                    item {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        // Cerrar sesion
+                        val provider = uiState.providers.firstOrNull()
+                        if (provider != null) {
+                            TvClickableSurface(
+                                onClick = { viewModel.deleteProvider(provider.id) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp),
+                                shape = androidx.tv.material3.ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+                                colors = androidx.tv.material3.ClickableSurfaceDefaults.colors(
+                                    containerColor = Color(0xFFE8001C).copy(alpha = 0.14f),
+                                    focusedContainerColor = Color(0xFFE8001C).copy(alpha = 0.28f),
+                                    contentColor = Color(0xFFE8001C)
+                                )
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Text(
+                                        text = "⏏",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = Color(0xFFE8001C)
+                                    )
+                                    Text(
+                                        text = "Cerrar sesión",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color(0xFFE8001C)
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 

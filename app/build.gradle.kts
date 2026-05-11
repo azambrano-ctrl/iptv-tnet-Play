@@ -45,11 +45,11 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.streamvault.app"
+        applicationId = "com.tnet.play"
         minSdk = 28
         targetSdk = 36
-        versionCode = 10
-        versionName = "1.0.9"
+        versionCode = 1
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.streamvault.app\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
@@ -175,6 +175,7 @@ dependencies {
     implementation(libs.documentfile)
     implementation(libs.coroutines.android)
     implementation(libs.appcompat)
+    implementation(libs.core.splashscreen)
     implementation(libs.mediarouter)
     implementation(libs.play.services.cast.framework)
 

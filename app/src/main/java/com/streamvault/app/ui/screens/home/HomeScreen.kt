@@ -660,7 +660,7 @@ fun HomeScreen(
                                     ),
                                     border = ClickableSurfaceDefaults.border(
                                         focusedBorder = Border(
-                                            border = BorderStroke(2.dp, Primary.copy(alpha = 0.85f)),
+                                            border = BorderStroke(2.dp, FocusBorder),
                                             shape = RoundedCornerShape(12.dp)
                                         )
                                     ),

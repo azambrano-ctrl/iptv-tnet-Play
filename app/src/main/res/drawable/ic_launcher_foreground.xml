@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
-    android:src="@drawable/ic_launcher_vault_art"
-    android:gravity="fill"/>
-
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- White play button centered in safe zone (27dp–81dp) -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M43,34 L43,74 L72,54 Z"/>
+</vector>

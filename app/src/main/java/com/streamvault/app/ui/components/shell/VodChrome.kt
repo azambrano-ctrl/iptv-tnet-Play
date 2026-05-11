@@ -40,7 +40,7 @@ import com.streamvault.app.ui.design.AppColors
 import com.streamvault.app.ui.components.ChipRowItem
 import com.streamvault.app.ui.components.ChipRowSection
 import com.streamvault.app.ui.design.AppColors.Brand as Primary
-import com.streamvault.app.ui.design.AppColors.Focus as FocusBorder
+import com.streamvault.app.ui.design.AppColors.FocusBorder as FocusBorder
 import com.streamvault.app.ui.design.AppColors.SurfaceElevated as SurfaceElevated
 import com.streamvault.app.ui.design.AppColors.SurfaceEmphasis as SurfaceHighlight
 import com.streamvault.app.ui.design.AppColors.TextPrimary as TextPrimary

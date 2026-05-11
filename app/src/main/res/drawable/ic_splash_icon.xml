@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Splash icon: logo TNET play escalado a 132×52dp, cabe dentro del círculo de 80dp del splash -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:left="14dp"
+        android:right="14dp"
+        android:top="54dp"
+        android:bottom="54dp">
+        <bitmap
+            android:src="@drawable/tnet_logo"
+            android:gravity="fill"/>
+    </item>
+</layer-list>

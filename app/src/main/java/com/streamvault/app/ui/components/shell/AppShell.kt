@@ -261,24 +261,25 @@ private fun TopNavigationBar(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(56.dp)
-                .padding(horizontal = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .height(60.dp)
+                .padding(horizontal = 14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleSmall,
-                color = AppColors.TextPrimary,
-                modifier = Modifier.wrapContentWidth(Alignment.Start)
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = R.drawable.tnet_logo),
+                contentDescription = "TNET play",
+                modifier = Modifier
+                    .height(42.dp)
+                    .wrapContentWidth(),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
-            Spacer(modifier = Modifier.width(32.dp)) // Increased spacing to prevent overlap
+            Spacer(modifier = Modifier.weight(1f))
             Row(
                 modifier = Modifier
-                    .weight(1f)
                     .horizontalScroll(scrollState)
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    .padding(horizontal = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { item ->
                     val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
@@ -348,27 +349,30 @@ private fun TopNavigationButton(
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
                 shape = RoundedCornerShape(14.dp)
             )
         )
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(3.dp)
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) AppColors.Brand else AppColors.TextSecondary,
-                modifier = Modifier.size(14.dp)
+                tint = if (selected) AppColors.Brand else if (isFocused) AppColors.TextPrimary else AppColors.TextSecondary,
+                modifier = Modifier.size(20.dp)
             )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.labelSmall,
-                color = if (selected) AppColors.TextPrimary else AppColors.TextSecondary
-            )
+            if (selected || isFocused) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (selected) AppColors.Brand else AppColors.TextPrimary,
+                    maxLines = 1
+                )
+            }
         }
     }
 }
@@ -588,7 +592,7 @@ fun LoadMoreCard(
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
                 shape = shapes.medium
             )
         )
@@ -678,15 +682,13 @@ private fun DestinationRail(
                 .padding(horizontal = 12.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleMedium,
-                color = AppColors.TextPrimary
-            )
-            Text(
-                text = stringResource(R.string.label_tv),
-                style = MaterialTheme.typography.labelSmall,
-                color = AppColors.TextTertiary
+            androidx.compose.foundation.Image(
+                painter = androidx.compose.ui.res.painterResource(id = R.drawable.tnet_logo),
+                contentDescription = "TNET play",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp),
+                contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
             Spacer(modifier = Modifier.height(10.dp))
             items.forEach { item ->
@@ -727,45 +729,46 @@ private fun RailButton(
         onClick = onClick,
         modifier = modifier
             .focusRequester(focusRequester)
-            .mouseClickable(
-                focusRequester = focusRequester,
-                onClick = onClick
-            )
+            .mouseClickable(focusRequester = focusRequester, onClick = onClick)
             .fillMaxWidth()
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-            }
+            .graphicsLayer { scaleX = scale; scaleY = scale }
             .onFocusChanged { isFocused = it.isFocused },
-        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(18.dp)),
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(14.dp)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = if (selected) AppColors.BrandMuted else Color.Transparent,
-            focusedContainerColor = AppColors.SurfaceEmphasis
+            focusedContainerColor = AppColors.CardFocusOverlay
         ),
         border = ClickableSurfaceDefaults.border(
+            border = Border(
+                border = BorderStroke(
+                    if (selected) 2.dp else 0.dp,
+                    if (selected) AppColors.Brand else Color.Transparent
+                ),
+                shape = RoundedCornerShape(14.dp)
+            ),
             focusedBorder = Border(
-                border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus),
-                shape = RoundedCornerShape(18.dp)
+                border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder),
+                shape = RoundedCornerShape(14.dp)
             )
         )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 14.dp),
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = if (selected) AppColors.Brand else AppColors.TextSecondary,
-                modifier = Modifier.size(20.dp)
+                tint = if (selected || isFocused) AppColors.Brand else AppColors.TextSecondary,
+                modifier = Modifier.size(24.dp)
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleSmall,
-                color = if (selected) AppColors.TextPrimary else AppColors.TextSecondary,
+                color = if (selected || isFocused) AppColors.TextPrimary else AppColors.TextSecondary,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )

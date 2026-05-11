@@ -198,7 +198,7 @@ private fun MultiViewSlotCard(
         ),
         border = ClickableSurfaceDefaults.border(
             border = Border(border = BorderStroke(1.dp, accent.copy(alpha = 0.35f))),
-            focusedBorder = Border(border = BorderStroke(FocusSpec.BorderWidth, AppColors.Focus))
+            focusedBorder = Border(border = BorderStroke(FocusSpec.BorderWidth, AppColors.FocusBorder))
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = FocusSpec.FocusedScale)
     ) {

@@ -299,7 +299,7 @@ internal fun CategoryItem(
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(2.dp, Primary.copy(alpha = 0.85f)),
+                border = BorderStroke(3.dp, FocusBorder),
                 shape = RoundedCornerShape(10.dp)
             )
         )

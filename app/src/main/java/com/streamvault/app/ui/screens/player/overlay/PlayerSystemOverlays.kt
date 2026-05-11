@@ -70,6 +70,7 @@ import com.streamvault.app.ui.screens.player.PlayerRecoveryType
 import com.streamvault.app.ui.screens.player.SleepTimerUiState
 import com.streamvault.app.ui.theme.AccentAmber
 import com.streamvault.app.ui.theme.ErrorColor
+import com.streamvault.app.ui.theme.FocusBorder
 import com.streamvault.app.ui.theme.OnBackground
 import com.streamvault.app.ui.theme.OnSurface
 import com.streamvault.app.ui.theme.OnSurfaceDim
@@ -139,6 +140,12 @@ fun PlayerNoticeBanner(
                             colors = ClickableSurfaceDefaults.colors(
                                 containerColor = Color.White.copy(alpha = 0.12f),
                                 focusedContainerColor = focusedContainerColor
+                            ),
+                            border = ClickableSurfaceDefaults.border(
+                                focusedBorder = Border(
+                                    border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                                    shape = RoundedCornerShape(8.dp)
+                                )
                             )
                         ) {
                             Text(
@@ -208,6 +215,12 @@ fun PlayerErrorOverlay(
                         colors = ClickableSurfaceDefaults.colors(
                             containerColor = if (action == PlayerNoticeAction.RETRY) Primary else Color.White.copy(alpha = 0.08f),
                             focusedContainerColor = if (action == PlayerNoticeAction.RETRY) PrimaryLight else Color.White.copy(alpha = 0.18f)
+                        ),
+                        border = ClickableSurfaceDefaults.border(
+                            focusedBorder = Border(
+                                border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                                shape = RoundedCornerShape(8.dp)
+                            )
                         )
                     ) {
                         Text(
@@ -944,7 +957,7 @@ fun PlayerEpisodeSelectionDialog(
                                                     )
                                                 ),
                                                 focusedBorder = Border(
-                                                    border = androidx.compose.foundation.BorderStroke(2.dp, AppColors.Focus)
+                                                    border = androidx.compose.foundation.BorderStroke(2.dp, AppColors.FocusBorder)
                                                 )
                                             ),
                                             scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
@@ -1037,7 +1050,7 @@ fun PlayerEpisodeSelectionDialog(
                                                     )
                                                 ),
                                                 focusedBorder = Border(
-                                                    border = androidx.compose.foundation.BorderStroke(2.dp, AppColors.Focus)
+                                                    border = androidx.compose.foundation.BorderStroke(2.dp, AppColors.FocusBorder)
                                                 )
                                             ),
                                             scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
@@ -1243,6 +1256,12 @@ private fun TrackSelectionItem(
             containerColor = if (isSelected) Primary.copy(alpha = 0.2f) else Color.Transparent,
             focusedContainerColor = SurfaceHighlight
         ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                shape = RoundedCornerShape(8.dp)
+            )
+        ),
         modifier = modifier.fillMaxWidth()
     ) {
         Row(
@@ -1346,6 +1365,12 @@ fun PlayerResumePrompt(
                         containerColor = SurfaceElevated,
                         focusedContainerColor = SurfaceHighlight
                     ),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(
+                            border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    ),
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(startOverFocusRequester)
@@ -1369,6 +1394,12 @@ fun PlayerResumePrompt(
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = Primary,
                         focusedContainerColor = PrimaryLight
+                    ),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(
+                            border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                            shape = RoundedCornerShape(8.dp)
+                        )
                     ),
                     modifier = Modifier
                         .weight(1f)
@@ -1516,6 +1547,12 @@ fun NextEpisodeCountdownOverlay(
                         containerColor = Primary,
                         focusedContainerColor = PrimaryLight
                     ),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(
+                            border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                    ),
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(playNowFocusRequester)
@@ -1536,6 +1573,12 @@ fun NextEpisodeCountdownOverlay(
                     colors = ClickableSurfaceDefaults.colors(
                         containerColor = SurfaceElevated,
                         focusedContainerColor = SurfaceHighlight
+                    ),
+                    border = ClickableSurfaceDefaults.border(
+                        focusedBorder = Border(
+                            border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                            shape = RoundedCornerShape(8.dp)
+                        )
                     ),
                     modifier = Modifier.weight(1f)
                 ) {

@@ -3,8 +3,8 @@ package com.streamvault.app.ui.design
 import androidx.compose.ui.unit.dp
 
 object FocusSpec {
-    const val FocusedScale = 1.06f
-    const val PressedScale = 0.98f
-    val BorderWidth = 3.dp
-    val CardBorderWidth = 4.dp
+    const val FocusedScale = 1.08f
+    const val PressedScale = 0.97f
+    val BorderWidth = 4.dp
+    val CardBorderWidth = 5.dp
 }

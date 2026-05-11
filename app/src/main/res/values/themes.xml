@@ -7,6 +7,14 @@
         <item name="android:windowBackground">@android:color/black</item>
     </style>
 
+    <!-- Splash screen theme — MainActivity uses this, switches to Theme.StreamVault after splash -->
+    <style name="Theme.StreamVault.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#0A0A0A</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_icon</item>
+        <item name="windowSplashScreenIconBackgroundColor">#00000000</item>
+        <item name="postSplashScreenTheme">@style/Theme.StreamVault</item>
+    </style>
+
     <style name="Theme.StreamVault.CastChooser" parent="Theme.AppCompat.Dialog">
         <item name="android:windowBackground">@android:color/transparent</item>
         <item name="android:windowIsTranslucent">true</item>

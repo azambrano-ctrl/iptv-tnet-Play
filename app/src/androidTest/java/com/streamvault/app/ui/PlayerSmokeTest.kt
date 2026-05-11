@@ -17,7 +17,7 @@ import com.streamvault.app.ui.components.shell.CategoryRailPanel
 import com.streamvault.app.ui.screens.player.overlay.PlayerControlsOverlay
 import com.streamvault.app.ui.screens.player.overlay.PlayerTrackSelectionDialog
 import com.streamvault.app.ui.test.TestFixtures
-import com.streamvault.app.ui.theme.StreamVaultTheme
+import com.streamvault.app.ui.theme.TnetPlayTheme
 import com.streamvault.player.TrackType
 import org.junit.Rule
 import org.junit.Test
@@ -35,7 +35,7 @@ class PlayerSmokeTest {
 
         composeRule.setContent {
             val query = remember { mutableStateOf("") }
-            StreamVaultTheme {
+            TnetPlayTheme {
                 CategoryRailPanel(
                     title = "Guide",
                     searchValue = query.value,
@@ -61,7 +61,7 @@ class PlayerSmokeTest {
         val playButtonFocusRequester = FocusRequester()
 
         composeRule.setContent {
-            StreamVaultTheme {
+            TnetPlayTheme {
                 PlayerControlsOverlay(
                     visible = true,
                     title = TestFixtures.vodTitle,
@@ -109,7 +109,7 @@ class PlayerSmokeTest {
     @Test
     fun playerControlsOverlay_showsMuteActionWhenMuted() {
         composeRule.setContent {
-            StreamVaultTheme {
+            TnetPlayTheme {
                 PlayerControlsOverlay(
                     visible = true,
                     title = TestFixtures.liveTitle,
@@ -157,7 +157,7 @@ class PlayerSmokeTest {
         var selectedTrackId: String? = null
 
         composeRule.setContent {
-            StreamVaultTheme {
+            TnetPlayTheme {
                 PlayerTrackSelectionDialog(
                     trackType = TrackType.AUDIO,
                     audioTracks = TestFixtures.audioTracks,

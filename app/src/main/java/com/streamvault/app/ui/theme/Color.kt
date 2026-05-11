@@ -34,5 +34,5 @@ val ErrorColor = AccentRed
 val GradientOverlayTop = AppColors.HeroTop
 val GradientOverlayBottom = AppColors.HeroBottom
 
-val FocusBorder = AppColors.Focus
+val FocusBorder = AppColors.FocusBorder
 val ProgressBarBackground = AppColors.SurfaceAccent

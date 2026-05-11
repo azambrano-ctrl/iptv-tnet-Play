@@ -58,6 +58,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.tv.material3.Border
 import androidx.tv.material3.ClickableSurfaceDefaults
 import androidx.tv.material3.Icon
 import androidx.tv.material3.MaterialTheme
@@ -74,6 +75,7 @@ import com.streamvault.app.ui.screens.player.SleepTimerUiState
 import com.streamvault.app.ui.time.LocalAppTimeFormat
 import com.streamvault.app.ui.time.createTimeFormat
 import com.streamvault.app.ui.theme.ErrorColor
+import com.streamvault.app.ui.theme.FocusBorder
 import com.streamvault.app.ui.theme.Primary
 import com.streamvault.domain.model.Program
 import com.streamvault.domain.model.RecordingStatus
@@ -1411,6 +1413,12 @@ private fun PlayerQuickSettingsButton(
             containerColor = Color.White.copy(alpha = 0.1f),
             focusedContainerColor = Primary.copy(alpha = 0.9f)
         ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                shape = RoundedCornerShape(8.dp)
+            )
+        ),
         modifier = modifier
     ) {
         Text(
@@ -1460,8 +1468,15 @@ private fun PlayerTransportButton(
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(50)),
         colors = ClickableSurfaceDefaults.colors(
             containerColor = Color.White.copy(alpha = 0.1f),
-            focusedContainerColor = Color.White.copy(alpha = 0.3f)
+            focusedContainerColor = Color.White.copy(alpha = 0.22f)
         ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(
+                border = androidx.compose.foundation.BorderStroke(2.dp, FocusBorder),
+                shape = RoundedCornerShape(50)
+            )
+        ),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1.08f),
         modifier = modifier
             .size(buttonSize)
             .onPreviewKeyEvent { event ->
