@@ -942,7 +942,8 @@ private fun NowPlusDashboard(
                             showRefresh = true,
                             lastSyncedAt = uiState.providerHealth.lastSyncedAt,
                             onClick = { onNavigate(Routes.MOVIES) },
-                            modifier = Modifier.weight(1.05f).fillMaxHeight()
+                            modifier = Modifier.weight(1.05f).fillMaxHeight(),
+                            accentColor = Color(0xFFFFAA00)
                         )
                         NowMediumCard(
                             title = "DESCARGAR",
@@ -950,7 +951,8 @@ private fun NowPlusDashboard(
                             showRefresh = false,
                             lastSyncedAt = 0L,
                             onClick = { onNavigate(Routes.SEARCH) },
-                            modifier = Modifier.weight(0.95f).fillMaxHeight()
+                            modifier = Modifier.weight(0.95f).fillMaxHeight(),
+                            accentColor = Color(0xFF00C9A7)
                         )
                     }
                     Row(
@@ -961,19 +963,22 @@ private fun NowPlusDashboard(
                             icon = { NowEpgIcon() },
                             title = "EPG",
                             onClick = { onNavigate(Routes.EPG) },
-                            modifier = Modifier.weight(1f).fillMaxHeight()
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            accentColor = Color(0xFF3B82F6)
                         )
                         NowSmallCard(
                             icon = { NowMultiViewIcon() },
                             title = "PANTALLA\nMÚLTIPLE",
                             onClick = { onNavigate(Routes.MULTI_VIEW) },
-                            modifier = Modifier.weight(1f).fillMaxHeight()
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            accentColor = Color(0xFF8B5CF6)
                         )
                         NowSmallCard(
                             icon = { NowCatchUpIcon() },
                             title = "CATCH UP",
                             onClick = { onNavigate(Routes.EPG) },
-                            modifier = Modifier.weight(1f).fillMaxHeight()
+                            modifier = Modifier.weight(1f).fillMaxHeight(),
+                            accentColor = Color(0xFFFF6200)
                         )
                     }
                 }
@@ -1040,44 +1045,46 @@ private fun NowBigCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val accent = Color(0xFFE8001C)
     val lastUpdated = remember(lastSyncedAt) { nowFormatTimeAgo(lastSyncedAt) }
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(20.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color(0xFF141414),
-            focusedContainerColor = Color(0xFF1A1A1A)
+            containerColor = Color(0xFF120608),
+            focusedContainerColor = Color(0xFF1A080C)
         ),
         border = ClickableSurfaceDefaults.border(
-            border = Border(border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.14f)), shape = RoundedCornerShape(20.dp)),
+            border = Border(border = BorderStroke(1.5.dp, accent.copy(alpha = 0.28f)), shape = RoundedCornerShape(20.dp)),
             focusedBorder = Border(border = BorderStroke(2.5.dp, FocusBorder), shape = RoundedCornerShape(20.dp))
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.015f)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(0xFF1C1C1C), Color(0xFF0C0C0C))))
-        ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Colored top-glow overlay
+            Box(modifier = Modifier.fillMaxSize().background(
+                Brush.verticalGradient(listOf(accent.copy(0.22f), accent.copy(0.06f), Color.Transparent))
+            ))
             Column(
                 modifier = Modifier.fillMaxSize().padding(18.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(
-                    text = "TV EN VIVO",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
-                )
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(modifier = Modifier.size(8.dp).background(accent, RoundedCornerShape(999.dp)))
+                    Text(
+                        text = "TV EN VIVO",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = TextPrimary
+                    )
+                }
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         NowTvIcon()
                         if (channelCount > 0) {
-                            Text(
-                                text = "$channelCount canales",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = TextPrimary.copy(alpha = 0.50f)
-                            )
+                            Box(modifier = Modifier.background(accent.copy(0.18f), RoundedCornerShape(999.dp)).padding(horizontal = 12.dp, vertical = 4.dp)) {
+                                Text(text = "$channelCount canales", style = MaterialTheme.typography.labelMedium, color = accent)
+                            }
                         }
                     }
                 }
@@ -1086,18 +1093,8 @@ private fun NowBigCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Última actualización: $lastUpdated",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = TextPrimary.copy(alpha = 0.55f),
-                        modifier = Modifier.weight(1f)
-                    )
-                    Box(
-                        modifier = Modifier
-                            .size(28.dp)
-                            .background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
+                    Text(text = "Actualizado: $lastUpdated", style = MaterialTheme.typography.labelSmall, color = TextPrimary.copy(alpha = 0.50f), modifier = Modifier.weight(1f))
+                    Box(modifier = Modifier.size(28.dp).background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) {
                         NowRefreshIcon()
                     }
                 }
@@ -1113,7 +1110,8 @@ private fun NowMediumCard(
     showRefresh: Boolean,
     lastSyncedAt: Long,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accentColor: Color = Color(0xFFFFAA00)
 ) {
     val lastUpdated = remember(lastSyncedAt) { nowFormatTimeAgo(lastSyncedAt) }
     TvClickableSurface(
@@ -1121,52 +1119,26 @@ private fun NowMediumCard(
         modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(20.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color(0xFF141414),
-            focusedContainerColor = Color(0xFF1A1A1A)
+            containerColor = Color(0xFF0E0E0E),
+            focusedContainerColor = Color(0xFF181818)
         ),
         border = ClickableSurfaceDefaults.border(
-            border = Border(border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.14f)), shape = RoundedCornerShape(20.dp)),
+            border = Border(border = BorderStroke(1.5.dp, accentColor.copy(alpha = 0.24f)), shape = RoundedCornerShape(20.dp)),
             focusedBorder = Border(border = BorderStroke(2.5.dp, FocusBorder), shape = RoundedCornerShape(20.dp))
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.015f)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(0xFF1C1C1C), Color(0xFF0C0C0C))))
-        ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(16.dp),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary
-                )
-                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    icon()
-                }
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(
+                Brush.verticalGradient(listOf(accentColor.copy(0.16f), accentColor.copy(0.04f), Color.Transparent))
+            ))
+            Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
+                Text(text = title, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
+                Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { icon() }
                 if (showRefresh) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Última actualización: $lastUpdated",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextPrimary.copy(alpha = 0.50f),
-                            modifier = Modifier.weight(1f)
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(26.dp)
-                                .background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            NowRefreshIcon()
-                        }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(text = "Actualizado: $lastUpdated", style = MaterialTheme.typography.labelSmall, color = TextPrimary.copy(alpha = 0.45f), modifier = Modifier.weight(1f))
+                        Box(modifier = Modifier.size(26.dp).background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) { NowRefreshIcon() }
                     }
                 }
             }
@@ -1179,40 +1151,32 @@ private fun NowSmallCard(
     icon: @Composable () -> Unit,
     title: String,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    accentColor: Color = Color(0xFF3B82F6)
 ) {
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier,
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(18.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = Color(0xFF141414),
-            focusedContainerColor = Color(0xFF1A1A1A)
+            containerColor = Color(0xFF0E0E0E),
+            focusedContainerColor = Color(0xFF181818)
         ),
         border = ClickableSurfaceDefaults.border(
-            border = Border(border = BorderStroke(1.5.dp, Color.White.copy(alpha = 0.14f)), shape = RoundedCornerShape(18.dp)),
+            border = Border(border = BorderStroke(1.5.dp, accentColor.copy(alpha = 0.26f)), shape = RoundedCornerShape(18.dp)),
             focusedBorder = Border(border = BorderStroke(2.5.dp, FocusBorder), shape = RoundedCornerShape(18.dp))
         ),
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.02f)
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Brush.verticalGradient(listOf(Color(0xFF1C1C1C), Color(0xFF0C0C0C)))),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                icon()
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = TextPrimary,
-                    textAlign = TextAlign.Center,
-                    maxLines = 2
-                )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Box(modifier = Modifier.fillMaxSize().background(
+                Brush.verticalGradient(listOf(accentColor.copy(0.18f), accentColor.copy(0.04f), Color.Transparent))
+            ))
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    icon()
+                    Text(text = title, style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold), color = TextPrimary, textAlign = TextAlign.Center, maxLines = 2)
+                }
             }
         }
     }
@@ -1220,135 +1184,168 @@ private fun NowSmallCard(
 
 @Composable
 private fun NowTvIcon() {
-    val brandRed = Color(0xFFE8001C)
-    Canvas(modifier = Modifier.size(72.dp)) {
-        val w = size.width
-        val h = size.height
-        val stroke = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.5f)
-        val screen = androidx.compose.ui.geometry.Rect(w * 0.08f, h * 0.22f, w * 0.92f, h * 0.75f)
-        drawRoundRect(color = Color.White.copy(alpha = 0.85f), topLeft = screen.topLeft, size = screen.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f), style = stroke)
-        drawLine(Color.White.copy(0.60f), Offset(w * 0.50f, h * 0.75f), Offset(w * 0.50f, h * 0.88f), 3f)
-        drawLine(Color.White.copy(0.60f), Offset(w * 0.28f, h * 0.88f), Offset(w * 0.72f, h * 0.88f), 3f)
-        drawLine(brandRed.copy(0.90f), Offset(w * 0.32f, h * 0.08f), Offset(w * 0.48f, h * 0.20f), 3.5f)
-        drawLine(brandRed.copy(0.90f), Offset(w * 0.68f, h * 0.08f), Offset(w * 0.52f, h * 0.20f), 3.5f)
+    val red = Color(0xFFE8001C)
+    val cap = androidx.compose.ui.graphics.StrokeCap.Round
+    Canvas(modifier = Modifier.size(80.dp)) {
+        val w = size.width; val h = size.height
+        val cx = w / 2f; val cy = h * 0.50f
+        // Outer glow
+        drawCircle(Brush.radialGradient(listOf(red.copy(0.28f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.52f), radius = w * 0.52f, center = Offset(cx, cy))
+        // TV body filled
+        val body = androidx.compose.ui.geometry.Rect(w * 0.06f, h * 0.20f, w * 0.94f, h * 0.78f)
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF2A2A2A), Color(0xFF111111)), startY = body.top, endY = body.bottom), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(16f))
+        drawRoundRect(Color.White.copy(0.75f), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(16f), style = androidx.compose.ui.graphics.drawscope.Stroke(3f))
+        // Screen fill (dark blue glow)
+        val scr = androidx.compose.ui.geometry.Rect(w * 0.13f, h * 0.27f, w * 0.87f, h * 0.71f)
+        drawRoundRect(Brush.linearGradient(listOf(Color(0xFF0A0F22), Color(0xFF060D1A)), start = Offset(scr.left, scr.top), end = Offset(scr.right, scr.bottom)), topLeft = scr.topLeft, size = scr.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f))
+        // Red screen glow
+        drawRoundRect(red.copy(0.12f), topLeft = scr.topLeft, size = scr.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f))
+        // Play circle (red filled)
+        val pr = h * 0.13f
+        drawCircle(red.copy(0.95f), radius = pr, center = Offset(cx, cy))
+        drawCircle(Color.White.copy(0.20f), radius = pr, center = Offset(cx, cy), style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f))
         val tri = Path().apply {
-            moveTo(w * 0.38f, h * 0.38f); lineTo(w * 0.70f, h * 0.48f); lineTo(w * 0.38f, h * 0.60f); close()
+            moveTo(cx - pr * 0.28f, cy - pr * 0.50f)
+            lineTo(cx + pr * 0.62f, cy)
+            lineTo(cx - pr * 0.28f, cy + pr * 0.50f); close()
         }
-        drawPath(tri, color = Color.White.copy(alpha = 0.90f))
+        drawPath(tri, Color.White)
+        // LIVE dot
+        drawCircle(red, radius = w * 0.035f, center = Offset(scr.right - w * 0.05f, scr.top + h * 0.055f))
+        // Antenna
+        drawLine(red, Offset(w * 0.35f, h * 0.20f), Offset(w * 0.46f, h * 0.07f), 3.5f, cap = cap)
+        drawLine(red, Offset(w * 0.65f, h * 0.20f), Offset(w * 0.54f, h * 0.07f), 3.5f, cap = cap)
+        drawCircle(red, radius = 4f, center = Offset(w * 0.46f, h * 0.07f))
+        drawCircle(red, radius = 4f, center = Offset(w * 0.54f, h * 0.07f))
+        // Stand
+        drawLine(Color.White.copy(0.50f), Offset(cx, h * 0.78f), Offset(cx, h * 0.90f), 3f, cap = cap)
+        drawLine(Color.White.copy(0.50f), Offset(w * 0.30f, h * 0.90f), Offset(w * 0.70f, h * 0.90f), 3f, cap = cap)
     }
 }
 
 @Composable
 private fun NowMovieIcon() {
-    val brand = Color(0xFFE8001C)
-    Canvas(modifier = Modifier.size(72.dp)) {
+    val amber = Color(0xFFFFAA00)
+    val cap = androidx.compose.ui.graphics.StrokeCap.Round
+    Canvas(modifier = Modifier.size(76.dp)) {
         val w = size.width; val h = size.height
-        val white = Color.White.copy(alpha = 0.92f)
-        val dim = Color.White.copy(alpha = 0.28f)
-        val sThick = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.5f, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
-        // Outer rounded rect (screen)
-        val rect = androidx.compose.ui.geometry.Rect(w * 0.08f, h * 0.28f, w * 0.92f, h * 0.84f)
-        drawRoundRect(color = dim, topLeft = rect.topLeft, size = rect.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f))
-        drawRoundRect(color = white, topLeft = rect.topLeft, size = rect.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f), style = sThick)
-        // Top clapper bar (filled)
-        val clapBar = androidx.compose.ui.geometry.Rect(w * 0.08f, h * 0.18f, w * 0.92f, h * 0.30f)
-        drawRoundRect(color = Color.White.copy(alpha = 0.18f), topLeft = clapBar.topLeft, size = clapBar.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f))
-        drawRoundRect(color = white, topLeft = clapBar.topLeft, size = clapBar.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
-        // Diagonal stripe on clapper
-        drawLine(white.copy(0.50f), Offset(w * 0.28f, h * 0.18f), Offset(w * 0.22f, h * 0.30f), 2.5f)
-        drawLine(white.copy(0.50f), Offset(w * 0.46f, h * 0.18f), Offset(w * 0.40f, h * 0.30f), 2.5f)
-        drawLine(white.copy(0.50f), Offset(w * 0.64f, h * 0.18f), Offset(w * 0.58f, h * 0.30f), 2.5f)
-        // Big play circle (brand red fill)
-        val cx = w * 0.50f; val cy = h * 0.57f; val r = h * 0.17f
-        drawCircle(brand.copy(alpha = 0.25f), radius = r, center = Offset(cx, cy))
-        drawCircle(white, radius = r, center = Offset(cx, cy), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.5f))
-        val tri = Path().apply {
-            moveTo(cx - r * 0.28f, cy - r * 0.48f)
-            lineTo(cx + r * 0.62f, cy)
-            lineTo(cx - r * 0.28f, cy + r * 0.48f)
-            close()
+        val cx = w / 2f; val cy = h * 0.54f
+        // Glow
+        drawCircle(Brush.radialGradient(listOf(amber.copy(0.22f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.50f), radius = w * 0.50f, center = Offset(cx, cy))
+        // Clapper body (filled)
+        val body = androidx.compose.ui.geometry.Rect(w * 0.09f, h * 0.28f, w * 0.91f, h * 0.86f)
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF2C2010), Color(0xFF141008)), startY = body.top, endY = body.bottom), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f))
+        drawRoundRect(Color.White.copy(0.75f), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f), style = androidx.compose.ui.graphics.drawscope.Stroke(2.8f))
+        // Clapper top bar (filled amber)
+        val bar = androidx.compose.ui.geometry.Rect(w * 0.09f, h * 0.17f, w * 0.91f, h * 0.30f)
+        drawRoundRect(Brush.horizontalGradient(listOf(amber, Color(0xFFFF6200)), startX = bar.left, endX = bar.right), topLeft = bar.topLeft, size = bar.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f))
+        // Diagonal stripes on clapper bar
+        for (i in 0..3) {
+            val x = w * (0.22f + i * 0.18f)
+            drawLine(Color.Black.copy(0.40f), Offset(x, h * 0.17f), Offset(x - w * 0.08f, h * 0.30f), 3.5f, cap = cap)
         }
-        drawPath(tri, color = white)
+        // Hinge line
+        drawLine(Color.White.copy(0.60f), Offset(w * 0.09f, h * 0.30f), Offset(w * 0.91f, h * 0.30f), 2f)
+        // Big play circle (red filled)
+        val pr = h * 0.18f
+        drawCircle(Color(0xFFE8001C).copy(0.95f), radius = pr, center = Offset(cx, cy))
+        drawCircle(amber.copy(0.40f), radius = pr + 6f, center = Offset(cx, cy), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+        val tri = Path().apply {
+            moveTo(cx - pr * 0.28f, cy - pr * 0.50f)
+            lineTo(cx + pr * 0.62f, cy)
+            lineTo(cx - pr * 0.28f, cy + pr * 0.50f); close()
+        }
+        drawPath(tri, Color.White)
     }
 }
 
 @Composable
 private fun NowDownloadIcon() {
-    Canvas(modifier = Modifier.size(72.dp)) {
+    val teal = Color(0xFF00C9A7)
+    val cap = androidx.compose.ui.graphics.StrokeCap.Round
+    Canvas(modifier = Modifier.size(76.dp)) {
         val w = size.width; val h = size.height
-        val white = Color.White.copy(alpha = 0.92f)
-        val cap = androidx.compose.ui.graphics.StrokeCap.Round
-        val join = androidx.compose.ui.graphics.StrokeJoin.Round
-        // Cloud-style download: filled rounded rect top
-        val cloud = androidx.compose.ui.geometry.Rect(w * 0.22f, h * 0.12f, w * 0.78f, h * 0.46f)
-        drawRoundRect(Color.White.copy(alpha = 0.18f), topLeft = cloud.topLeft, size = cloud.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(cloud.height / 2))
-        drawRoundRect(white, topLeft = cloud.topLeft, size = cloud.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(cloud.height / 2), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f))
-        // Arrow shaft
-        drawLine(white, Offset(w * 0.50f, h * 0.44f), Offset(w * 0.50f, h * 0.72f), 3.5f)
-        // Arrow head (filled triangle)
+        val cx = w / 2f; val cy = h * 0.48f
+        // Glow
+        drawCircle(Brush.radialGradient(listOf(teal.copy(0.22f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.50f), radius = w * 0.50f, center = Offset(cx, cy))
+        // Cloud body (filled)
+        val cloud = androidx.compose.ui.geometry.Rect(w * 0.14f, h * 0.10f, w * 0.86f, h * 0.50f)
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF0D2420), Color(0xFF061510)), startY = cloud.top, endY = cloud.bottom), topLeft = cloud.topLeft, size = cloud.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(cloud.height / 2))
+        drawRoundRect(teal.copy(0.90f), topLeft = cloud.topLeft, size = cloud.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(cloud.height / 2), style = androidx.compose.ui.graphics.drawscope.Stroke(3f))
+        // Down arrow shaft (teal)
+        drawLine(teal, Offset(cx, h * 0.48f), Offset(cx, h * 0.74f), 5f, cap = cap)
+        // Arrow head (filled teal)
         val tri = Path().apply {
-            moveTo(w * 0.28f, h * 0.58f)
-            lineTo(w * 0.50f, h * 0.78f)
-            lineTo(w * 0.72f, h * 0.58f)
-            close()
+            moveTo(cx - w * 0.20f, h * 0.60f)
+            lineTo(cx, h * 0.80f)
+            lineTo(cx + w * 0.20f, h * 0.60f); close()
         }
-        drawPath(tri, color = white)
-        // Base line with rounded caps
-        drawLine(white, Offset(w * 0.18f, h * 0.86f), Offset(w * 0.82f, h * 0.86f), 3.5f, cap = cap)
+        drawPath(tri, teal)
+        // Base tray
+        val tray = androidx.compose.ui.geometry.Rect(w * 0.14f, h * 0.84f, w * 0.86f, h * 0.92f)
+        drawRoundRect(Brush.horizontalGradient(listOf(teal.copy(0.60f), Color(0xFF00C9A7)), startX = tray.left, endX = tray.right), topLeft = tray.topLeft, size = tray.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f))
     }
 }
 
 @Composable
 private fun NowEpgIcon() {
-    Canvas(modifier = Modifier.size(58.dp)) {
+    val blue = Color(0xFF3B82F6)
+    Canvas(modifier = Modifier.size(62.dp)) {
         val w = size.width; val h = size.height
-        val white = Color.White.copy(alpha = 0.92f)
-        val accent = Color(0xFFE8001C).copy(alpha = 0.80f)
-        val sMain = androidx.compose.ui.graphics.drawscope.Stroke(width = 2.8f, cap = androidx.compose.ui.graphics.StrokeCap.Round)
-        // TV screen body
-        val screen = androidx.compose.ui.geometry.Rect(w * 0.06f, h * 0.20f, w * 0.94f, h * 0.82f)
-        drawRoundRect(Color.White.copy(alpha = 0.12f), topLeft = screen.topLeft, size = screen.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f))
-        drawRoundRect(white, topLeft = screen.topLeft, size = screen.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f), style = sMain)
-        // 3 horizontal schedule bars inside screen
+        val cx = w / 2f; val cy = h / 2f
+        // Glow
+        drawCircle(Brush.radialGradient(listOf(blue.copy(0.24f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.48f), radius = w * 0.48f, center = Offset(cx, cy))
+        // Calendar body filled
+        val body = androidx.compose.ui.geometry.Rect(w * 0.08f, h * 0.18f, w * 0.92f, h * 0.90f)
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF0A1530), Color(0xFF060D20)), startY = body.top, endY = body.bottom), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f))
+        drawRoundRect(blue.copy(0.80f), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f), style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f))
+        // Header bar (blue filled)
+        val header = androidx.compose.ui.geometry.Rect(w * 0.08f, h * 0.18f, w * 0.92f, h * 0.36f)
+        drawRoundRect(Brush.horizontalGradient(listOf(blue, Color(0xFF1D4ED8)), startX = header.left, endX = header.right), topLeft = header.topLeft, size = header.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(topLeft = 10f, topRight = 10f, bottomLeft = 0f, bottomRight = 0f))
+        // Header dots (ring binders)
+        drawCircle(Color.White.copy(0.80f), radius = w * 0.035f, center = Offset(w * 0.32f, h * 0.18f))
+        drawCircle(Color.White.copy(0.80f), radius = w * 0.035f, center = Offset(w * 0.68f, h * 0.18f))
+        // 3 schedule rows
         val barH = h * 0.09f
         for (i in 0..2) {
-            val top = h * (0.30f + i * 0.16f)
-            // first segment (accent color = "now playing")
-            drawRoundRect(if (i == 0) accent else Color.White.copy(0.20f), topLeft = Offset(w * 0.12f, top), size = androidx.compose.ui.geometry.Size(w * 0.32f, barH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3f))
-            // second segment
-            drawRoundRect(Color.White.copy(0.15f), topLeft = Offset(w * 0.46f, top), size = androidx.compose.ui.geometry.Size(w * 0.42f, barH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(3f))
+            val top = h * (0.42f + i * 0.155f)
+            drawRoundRect(if (i == 0) blue.copy(0.90f) else Color.White.copy(0.18f), topLeft = Offset(w * 0.14f, top), size = androidx.compose.ui.geometry.Size(w * 0.34f, barH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f))
+            drawRoundRect(Color.White.copy(0.14f), topLeft = Offset(w * 0.52f, top), size = androidx.compose.ui.geometry.Size(w * 0.34f, barH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(4f))
         }
-        // "EPG" top label dot
-        drawCircle(accent, radius = w * 0.04f, center = Offset(w * 0.50f, h * 0.13f))
     }
 }
 
 @Composable
 private fun NowMultiViewIcon() {
-    val brand = Color(0xFFE8001C)
-    Canvas(modifier = Modifier.size(58.dp)) {
+    val purple = Color(0xFF8B5CF6)
+    val red = Color(0xFFE8001C)
+    Canvas(modifier = Modifier.size(62.dp)) {
         val w = size.width; val h = size.height
-        val white = Color.White.copy(alpha = 0.92f)
-        val gap = w * 0.07f
+        val cx = w / 2f; val cy = h / 2f
+        // Glow
+        drawCircle(Brush.radialGradient(listOf(purple.copy(0.24f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.48f), radius = w * 0.48f, center = Offset(cx, cy))
+        val gap = w * 0.08f
         val cellW = (w - gap * 3f) / 2f
         val cellH = (h - gap * 3f) / 2f
+        val accents = listOf(red, purple.copy(0.70f), purple.copy(0.50f), purple.copy(0.35f))
+        var idx = 0
         for (row in 0..1) {
             for (col in 0..1) {
                 val left = gap + col * (cellW + gap)
                 val top = gap + row * (cellH + gap)
-                val fillColor = if (row == 0 && col == 0) brand.copy(alpha = 0.30f) else Color.White.copy(0.10f)
-                drawRoundRect(fillColor, topLeft = Offset(left, top), size = androidx.compose.ui.geometry.Size(cellW, cellH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f))
-                drawRoundRect(if (row == 0 && col == 0) white else white.copy(0.55f), topLeft = Offset(left, top), size = androidx.compose.ui.geometry.Size(cellW, cellH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f), style = androidx.compose.ui.graphics.drawscope.Stroke(width = if (row == 0 && col == 0) 2.8f else 1.8f))
-                // Small play in top-left cell
+                val ac = accents[idx++]
+                drawRoundRect(Brush.verticalGradient(listOf(ac.copy(0.35f), ac.copy(0.15f)), startY = top, endY = top + cellH), topLeft = Offset(left, top), size = androidx.compose.ui.geometry.Size(cellW, cellH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(7f))
+                drawRoundRect(if (row == 0 && col == 0) red.copy(0.90f) else Color.White.copy(0.40f), topLeft = Offset(left, top), size = androidx.compose.ui.geometry.Size(cellW, cellH), cornerRadius = androidx.compose.ui.geometry.CornerRadius(7f), style = androidx.compose.ui.graphics.drawscope.Stroke(if (row == 0 && col == 0) 2.5f else 1.5f))
                 if (row == 0 && col == 0) {
-                    val cx = left + cellW / 2f; val cy = top + cellH / 2f
+                    val pcx = left + cellW / 2f; val pcy = top + cellH / 2f
+                    val pr = cellW * 0.28f
+                    drawCircle(red.copy(0.90f), radius = pr, center = Offset(pcx, pcy))
                     val tri = Path().apply {
-                        moveTo(cx - cellW * 0.18f, cy - cellH * 0.24f)
-                        lineTo(cx + cellW * 0.26f, cy)
-                        lineTo(cx - cellW * 0.18f, cy + cellH * 0.24f)
-                        close()
+                        moveTo(pcx - pr * 0.28f, pcy - pr * 0.50f)
+                        lineTo(pcx + pr * 0.62f, pcy)
+                        lineTo(pcx - pr * 0.28f, pcy + pr * 0.50f); close()
                     }
-                    drawPath(tri, color = white)
+                    drawPath(tri, Color.White)
                 }
             }
         }
@@ -1357,35 +1354,41 @@ private fun NowMultiViewIcon() {
 
 @Composable
 private fun NowCatchUpIcon() {
-    val brand = Color(0xFFE8001C)
-    Canvas(modifier = Modifier.size(58.dp)) {
+    val orange = Color(0xFFFF6200)
+    val cap = androidx.compose.ui.graphics.StrokeCap.Round
+    Canvas(modifier = Modifier.size(62.dp)) {
         val w = size.width; val h = size.height
-        val white = Color.White.copy(alpha = 0.92f)
-        val capR = androidx.compose.ui.graphics.StrokeCap.Round
-        val cx = w * 0.52f; val cy = h * 0.54f; val r = h * 0.32f
-        // Clock fill
-        drawCircle(Color.White.copy(0.10f), radius = r, center = Offset(cx, cy))
-        // Clock outline (almost full circle, gap at ~8 o'clock for back-arrow)
-        drawArc(white, startAngle = 140f, sweepAngle = 280f, useCenter = false,
-            topLeft = Offset(cx - r, cy - r), size = androidx.compose.ui.geometry.Size(r * 2, r * 2),
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3f, cap = capR))
-        // Back arrow at the gap (8 o'clock position)
-        val ax = cx - r * 0.86f; val ay = cy + r * 0.50f
-        drawLine(brand, Offset(ax - 7f, ay - 10f), Offset(ax + 2f, ay + 2f), 3f, cap = capR)
-        drawLine(brand, Offset(ax - 7f, ay - 10f), Offset(ax + 9f, ay - 12f), 3f, cap = capR)
-        // Clock hands
-        drawLine(white, Offset(cx, cy), Offset(cx, cy - r * 0.52f), 3f, cap = capR)
-        drawLine(white, Offset(cx, cy), Offset(cx + r * 0.40f, cy + r * 0.28f), 3f, cap = capR)
-        drawCircle(brand, radius = 4f, center = Offset(cx, cy))
-        // Tick marks (12, 3, 6, 9)
-        for (i in 0..3) {
-            val angle = Math.toRadians((i * 90 - 90).toDouble())
-            val x1 = cx + (r * 0.78f) * Math.cos(angle).toFloat()
-            val y1 = cy + (r * 0.78f) * Math.sin(angle).toFloat()
-            val x2 = cx + r * Math.cos(angle).toFloat()
-            val y2 = cy + r * Math.sin(angle).toFloat()
-            drawLine(white.copy(0.50f), Offset(x1, y1), Offset(x2, y2), 2f, cap = capR)
+        val cx = w * 0.52f; val cy = h * 0.52f; val r = h * 0.33f
+        // Glow
+        drawCircle(Brush.radialGradient(listOf(orange.copy(0.26f), Color.Transparent), center = Offset(cx, cy), radius = r * 1.60f), radius = r * 1.60f, center = Offset(cx, cy))
+        // Clock fill (gradient)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFF1A0C00), Color(0xFF0A0600)), center = Offset(cx, cy), radius = r), radius = r, center = Offset(cx, cy))
+        // Clock border
+        drawCircle(orange.copy(0.85f), radius = r, center = Offset(cx, cy), style = androidx.compose.ui.graphics.drawscope.Stroke(3f))
+        // Tick marks
+        for (i in 0..11) {
+            val angle = Math.toRadians((i * 30 - 90).toDouble())
+            val r1 = if (i % 3 == 0) r * 0.72f else r * 0.80f
+            drawLine(Color.White.copy(if (i % 3 == 0) 0.70f else 0.30f),
+                Offset(cx + (r1).toFloat() * Math.cos(angle).toFloat(), cy + (r1).toFloat() * Math.sin(angle).toFloat()),
+                Offset(cx + r * Math.cos(angle).toFloat(), cy + r * Math.sin(angle).toFloat()),
+                if (i % 3 == 0) 2.5f else 1.5f, cap = cap)
         }
+        // Hour hand (short, white)
+        val ha = Math.toRadians(-60.0)
+        drawLine(Color.White.copy(0.90f), Offset(cx, cy), Offset(cx + (r * 0.44f * Math.cos(ha)).toFloat(), cy + (r * 0.44f * Math.sin(ha)).toFloat()), 3.5f, cap = cap)
+        // Minute hand (long, orange)
+        val ma = Math.toRadians(-90.0)
+        drawLine(orange, Offset(cx, cy), Offset(cx + (r * 0.65f * Math.cos(ma)).toFloat(), cy + (r * 0.65f * Math.sin(ma)).toFloat()), 3f, cap = cap)
+        drawCircle(orange, radius = 5f, center = Offset(cx, cy))
+        drawCircle(Color.White, radius = 2.5f, center = Offset(cx, cy))
+        // Rewind arrows (two curved arrows)
+        val ax = cx - r * 0.90f; val ay = cy - r * 0.14f
+        drawArc(orange, startAngle = 160f, sweepAngle = 130f, useCenter = false,
+            topLeft = Offset(ax - r * 0.22f, ay - r * 0.22f), size = androidx.compose.ui.geometry.Size(r * 0.44f, r * 0.44f),
+            style = androidx.compose.ui.graphics.drawscope.Stroke(3f, cap = cap))
+        drawLine(orange, Offset(ax - r * 0.14f, ay + r * 0.18f), Offset(ax - r * 0.22f, ay + r * 0.22f), 3f, cap = cap)
+        drawLine(orange, Offset(ax + r * 0.04f, ay + r * 0.12f), Offset(ax - r * 0.22f, ay + r * 0.22f), 3f, cap = cap)
     }
 }
 
