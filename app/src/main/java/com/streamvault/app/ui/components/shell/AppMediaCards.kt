@@ -96,9 +96,10 @@ fun LiveChannelRowCard(
 ) {
     val isUltraCompact = rowHeight <= 60.dp
     val isDense = rowHeight <= 56.dp
-    val contentPadding = if (isUltraCompact) 5.dp else 6.dp
-    val horizontalPadding = if (isUltraCompact) 8.dp else 10.dp
-    val logoWidth = if (isDense) 42.dp else if (isUltraCompact) 46.dp else 52.dp
+    val isComfortable = rowHeight >= 90.dp
+    val contentPadding = if (isUltraCompact) 5.dp else if (isComfortable) 8.dp else 6.dp
+    val horizontalPadding = if (isUltraCompact) 8.dp else if (isComfortable) 14.dp else 10.dp
+    val logoWidth = if (isDense) 42.dp else if (isUltraCompact) 46.dp else if (isComfortable) 70.dp else 52.dp
     val logoPadding = if (isDense) 5.dp else if (isUltraCompact) 6.dp else 8.dp
     val contentSpacing = if (isUltraCompact) 8.dp else 10.dp
     val badgeSpacing = if (isUltraCompact) 3.dp else 4.dp
@@ -170,7 +171,11 @@ fun LiveChannelRowCard(
                         }
                         append(channel.name)
                     },
-                    style = if (isDense) MaterialTheme.typography.bodyLarge else MaterialTheme.typography.titleSmall,
+                    style = when {
+                        isDense -> MaterialTheme.typography.bodyLarge
+                        isComfortable -> MaterialTheme.typography.titleMedium
+                        else -> MaterialTheme.typography.titleSmall
+                    },
                     color = AppColors.TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -179,7 +184,11 @@ fun LiveChannelRowCard(
                 if (program != null) {
                     Text(
                         text = program.title,
-                        style = if (isDense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodySmall,
+                        style = when {
+                            isDense -> MaterialTheme.typography.labelMedium
+                            isComfortable -> MaterialTheme.typography.bodyMedium
+                            else -> MaterialTheme.typography.bodySmall
+                        },
                         color = AppColors.TextSecondary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -191,9 +200,9 @@ fun LiveChannelRowCard(
                             progress = { (elapsed.toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(2.dp)
+                                .height(if (isComfortable) 4.dp else 2.dp)
                                 .clip(RoundedCornerShape(999.dp)),
-                            color = AppColors.Info,
+                            color = AppColors.Brand,
                             trackColor = AppColors.SurfaceEmphasis
                         )
                     }

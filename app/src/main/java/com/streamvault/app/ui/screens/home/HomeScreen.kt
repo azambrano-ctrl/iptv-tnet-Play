@@ -156,7 +156,7 @@ fun HomeScreen(
     } else if (!isTelevisionDevice && screenWidth < 1280.dp) {
         (screenWidth * 0.28f).coerceIn(220.dp, 252.dp)
     } else {
-        272.dp
+        290.dp
     }
     val channelSearchWidth = if (screenWidth < 900.dp) {
         (screenWidth * 0.34f).coerceIn(170.dp, 220.dp)
@@ -170,12 +170,12 @@ fun HomeScreen(
         340.dp
     }
     val channelRowHeight = when (uiState.liveTvChannelMode) {
-        LiveTvChannelMode.COMFORTABLE -> 92.dp
+        LiveTvChannelMode.COMFORTABLE -> 108.dp
         LiveTvChannelMode.COMPACT -> 54.dp
         LiveTvChannelMode.PRO -> 52.dp
     }
     val channelListSpacing = when (uiState.liveTvChannelMode) {
-        LiveTvChannelMode.COMFORTABLE -> 8.dp
+        LiveTvChannelMode.COMFORTABLE -> 10.dp
         LiveTvChannelMode.COMPACT -> 2.dp
         LiveTvChannelMode.PRO -> 2.dp
     }

@@ -3,6 +3,7 @@ package com.streamvault.app.ui.screens.home
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -305,39 +306,58 @@ internal fun CategoryItem(
         )
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            if (isPinned) {
-                PinnedCategoryGlyph(
-                    tint = if (isFocused) OnBackground else if (isSelected) Primary else OnSurfaceDim,
-                    modifier = Modifier.padding(end = 8.dp)
-                )
-            }
-            Text(
-                text = category.name,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = if (isFocused) OnBackground else if (isSelected) Primary else OnSurface,
-                modifier = Modifier.weight(1f)
+            Box(
+                modifier = androidx.compose.ui.Modifier
+                    .padding(start = 4.dp)
+                    .width(3.dp)
+                    .height(22.dp)
+                    .clip(RoundedCornerShape(2.dp))
+                    .background(
+                        when {
+                            isSelected -> Primary
+                            isFocused -> FocusBorder
+                            else -> Color.Transparent
+                        }
+                    )
             )
-
-            Text(
-                text = category.count.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = if (isFocused) OnBackground else OnSurfaceDim,
-                modifier = Modifier.padding(start = 10.dp)
-            )
-
-            if (isLocked) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 9.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                if (isPinned) {
+                    PinnedCategoryGlyph(
+                        tint = if (isFocused) OnBackground else if (isSelected) Primary else OnSurfaceDim,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                }
                 Text(
-                    text = stringResource(R.string.home_locked_short),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isFocused) OnBackground else OnSurfaceDim,
-                    modifier = Modifier.padding(start = 8.dp)
+                    text = category.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = if (isFocused) OnBackground else if (isSelected) Primary else OnSurface,
+                    modifier = Modifier.weight(1f)
                 )
+                Text(
+                    text = category.count.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = if (isFocused) OnBackground else OnSurfaceDim,
+                    modifier = Modifier.padding(start = 10.dp)
+                )
+                if (isLocked) {
+                    Text(
+                        text = stringResource(R.string.home_locked_short),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isFocused) OnBackground else OnSurfaceDim,
+                        modifier = Modifier.padding(start = 8.dp)
+                    )
+                }
             }
         }
     }
