@@ -1301,7 +1301,7 @@ private fun NowEpgIcon() {
         drawRoundRect(blue.copy(0.80f), topLeft = body.topLeft, size = body.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f), style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f))
         // Header bar (blue filled)
         val header = androidx.compose.ui.geometry.Rect(w * 0.08f, h * 0.18f, w * 0.92f, h * 0.36f)
-        drawRoundRect(Brush.horizontalGradient(listOf(blue, Color(0xFF1D4ED8)), startX = header.left, endX = header.right), topLeft = header.topLeft, size = header.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(topLeft = 10f, topRight = 10f, bottomLeft = 0f, bottomRight = 0f))
+        drawRoundRect(Brush.horizontalGradient(listOf(blue, Color(0xFF1D4ED8)), startX = header.left, endX = header.right), topLeft = header.topLeft, size = header.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f))
         // Header dots (ring binders)
         drawCircle(Color.White.copy(0.80f), radius = w * 0.035f, center = Offset(w * 0.32f, h * 0.18f))
         drawCircle(Color.White.copy(0.80f), radius = w * 0.035f, center = Offset(w * 0.68f, h * 0.18f))
