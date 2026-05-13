@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">StreamVault</string>
     <string name="nav_home">Zuhause</string>
@@ -404,9 +404,9 @@
     <string name="settings_enabled">Aktiviert</string>
     <string name="settings_disabled">Deaktiviert</string>
     <string name="settings_developed_by">Entwickelt von</string>
-    <string name="settings_developer_name">David Nashash</string>
+    <string name="settings_developer_name">ROAIMA S.A</string>
     <string name="settings_github">GitHub</string>
-    <string name="settings_github_url">https://github.com/Davidona</string>
+    <string name="settings_github_url">https://github.com/azambrano-ctrl/iptv-tnet-Play</string>
     <string name="settings_donate">Unterstützen auf Ko-fi</string>
     <string name="settings_donate_url">https://ko-fi.com/davidona</string>
     <string name="settings_updates_title">Updates</string>

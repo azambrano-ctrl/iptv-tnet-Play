@@ -77,7 +77,8 @@ import com.streamvault.app.ui.design.LocalAppSpacing
 
 enum class AppNavigationChrome {
     Rail,
-    TopBar
+    TopBar,
+    None
 }
 
 @Composable
@@ -110,38 +111,86 @@ fun AppScreenScaffold(
                 )
             )
     ) {
-        if (navigationChrome == AppNavigationChrome.Rail) {
-            Row(modifier = Modifier.fillMaxSize()) {
-                DestinationRail(
-                    currentRoute = currentRoute,
-                    onNavigate = onNavigate,
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(spacing.railWidth)
-                )
+        when (navigationChrome) {
+            AppNavigationChrome.Rail -> {
+                Row(modifier = Modifier.fillMaxSize()) {
+                    DestinationRail(
+                        currentRoute = currentRoute,
+                        onNavigate = onNavigate,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(spacing.railWidth)
+                    )
 
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(
+                                start = spacing.lg,
+                                end = spacing.screenGutter,
+                                top = spacing.safeTop,
+                                bottom = spacing.safeBottom
+                            )
+                    ) {
+                        if (showScreenHeader) {
+                            AppScreenHeader(
+                                title = title,
+                                subtitle = subtitle,
+                                modifier = Modifier.fillMaxWidth(),
+                                compact = compactHeader
+                            )
+                            if (header != null) {
+                                Spacer(modifier = Modifier.height(spacing.lg))
+                                header()
+                            }
+                            Spacer(modifier = Modifier.height(spacing.lg))
+                        } else if (header != null) {
+                            header()
+                        }
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(contentPadding)
+                        ) {
+                            content()
+                        }
+                    }
+                }
+            }
+            AppNavigationChrome.None -> {
+                Column(modifier = Modifier.fillMaxSize()) {
+                    content()
+                }
+            }
+            else -> {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(
-                            start = spacing.lg,
-                            end = spacing.screenGutter,
-                            top = spacing.safeTop,
-                            bottom = spacing.safeBottom
+                            horizontal = 14.dp,
+                            vertical = 10.dp
                         )
                 ) {
+                    if (topBarVisible) {
+                        TopNavigationBar(
+                            currentRoute = currentRoute,
+                            onNavigate = onNavigate,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
                     if (showScreenHeader) {
                         AppScreenHeader(
                             title = title,
                             subtitle = subtitle,
                             modifier = Modifier.fillMaxWidth(),
-                            compact = compactHeader
+                            compact = true
                         )
                         if (header != null) {
-                            Spacer(modifier = Modifier.height(spacing.lg))
+                            Spacer(modifier = Modifier.height(8.dp))
                             header()
                         }
-                        Spacer(modifier = Modifier.height(spacing.lg))
+                        Spacer(modifier = Modifier.height(8.dp))
                     } else if (header != null) {
                         header()
                     }
@@ -152,46 +201,6 @@ fun AppScreenScaffold(
                     ) {
                         content()
                     }
-                }
-            }
-        } else {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(
-                        horizontal = 14.dp,
-                        vertical = 10.dp
-                    )
-            ) {
-                if (topBarVisible) {
-                    TopNavigationBar(
-                        currentRoute = currentRoute,
-                        onNavigate = onNavigate,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                }
-                if (showScreenHeader) {
-                    AppScreenHeader(
-                        title = title,
-                        subtitle = subtitle,
-                        modifier = Modifier.fillMaxWidth(),
-                        compact = true
-                    )
-                    if (header != null) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        header()
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                } else if (header != null) {
-                    header()
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(contentPadding)
-                ) {
-                    content()
                 }
             }
         }
@@ -269,19 +278,20 @@ private fun TopNavigationBar(
                 painter = androidx.compose.ui.res.painterResource(id = R.drawable.tnet_logo),
                 contentDescription = "TNET play",
                 modifier = Modifier
-                    .height(42.dp)
+                    .height(56.dp)
                     .wrapContentWidth(),
                 contentScale = androidx.compose.ui.layout.ContentScale.Fit
             )
             Spacer(modifier = Modifier.weight(1f))
             Row(
-                modifier = Modifier
-                    .horizontalScroll(scrollState)
-                    .padding(horizontal = 6.dp),
+                modifier = Modifier.padding(horizontal = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                items.forEach { item ->
+                listOf(
+                    DestinationItem(Routes.SEARCH, R.string.search_title, Icons.Default.Search),
+                    DestinationItem(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings)
+                ).forEach { item ->
                     val requester = focusRequesters.getOrPut(item.route) { FocusRequester() }
                     TopNavigationButton(
                         label = stringResource(item.labelRes),

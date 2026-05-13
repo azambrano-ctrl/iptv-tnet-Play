@@ -48,7 +48,7 @@ android {
         applicationId = "com.tnet.play"
         minSdk = 28
         targetSdk = 36
-        versionCode = 9
+        versionCode = 11
         versionName = "1.5.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.streamvault.app\"")

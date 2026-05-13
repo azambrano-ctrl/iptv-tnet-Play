@@ -255,6 +255,7 @@ class DashboardViewModel @Inject constructor(
                     else -> emptyList()
                 },
                 updateNotice = snapshot.updateNotice,
+                isSyncing = syncState.isSyncing,
                 isLoading = false
             )
         }
@@ -571,6 +572,13 @@ class DashboardViewModel @Inject constructor(
         }
     }
 
+    fun refreshProvider() {
+        val providerId = _uiState.value.provider?.id ?: return
+        viewModelScope.launch {
+            syncManager.sync(providerId, force = true, movieFastSyncOverride = true)
+        }
+    }
+
     fun userMessageShown() {
         _uiState.value = _uiState.value.copy(userMessage = null)
     }
@@ -614,6 +622,7 @@ data class DashboardUiState(
     val updateNotice: DashboardUpdateNotice? = null,
     val stats: DashboardStats = DashboardStats(),
     val userMessage: String? = null,
+    val isSyncing: Boolean = false,
     val isLoading: Boolean = true
 )
 

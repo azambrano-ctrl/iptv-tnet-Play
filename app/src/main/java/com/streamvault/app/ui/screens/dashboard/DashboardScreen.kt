@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,8 +22,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -31,9 +38,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -81,6 +99,12 @@ import com.streamvault.domain.model.PlaybackHistory
 import com.streamvault.domain.model.Series
 import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.ui.res.painterResource
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -114,25 +138,28 @@ fun DashboardScreen(
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        AppScreenScaffold(
-            currentRoute = currentRoute,
-            onNavigate = onNavigate,
-            title = stringResource(R.string.nav_home),
-            subtitle = provider?.name,
-            navigationChrome = AppNavigationChrome.TopBar,
-            compactHeader = true,
-            showScreenHeader = false
-        ) {
-            if (provider == null) {
+        if (provider == null) {
+            AppScreenScaffold(
+                currentRoute = currentRoute,
+                onNavigate = onNavigate,
+                title = stringResource(R.string.nav_home),
+                subtitle = null,
+                navigationChrome = AppNavigationChrome.TopBar,
+                compactHeader = true,
+                showScreenHeader = false
+            ) {
                 EmptyDashboard(
                     onAddProvider = onAddProvider,
                     onOpenSettings = { onNavigate(Routes.SETTINGS) }
                 )
-                return@AppScreenScaffold
             }
+        } else {
             NowPlusDashboard(
                 uiState = uiState,
-                onNavigate = onNavigate
+                onNavigate = onNavigate,
+                onRefresh = viewModel::refreshProvider,
+                isSyncing = uiState.isSyncing,
+                onChannelClick = { channel -> onRecentChannelClick(channel, uiState.provider?.id) }
             )
         }
 
@@ -908,100 +935,861 @@ private fun TnetWelcomeHero(
 @Composable
 private fun NowPlusDashboard(
     uiState: DashboardUiState,
-    onNavigate: (String) -> Unit
+    onNavigate: (String) -> Unit,
+    onRefresh: () -> Unit = {},
+    isSyncing: Boolean = false,
+    onChannelClick: (Channel) -> Unit = {}
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    val expiryText = remember(uiState.providerHealth.expirationDate) {
+        if (uiState.providerHealth.expirationDate == null) "Sin expiración"
+        else {
+            val fmt = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            "Expira: ${fmt.format(Date(uiState.providerHealth.expirationDate))}"
+        }
+    }
+    val channels = remember(uiState.favoriteChannels, uiState.recentChannels) {
+        (uiState.favoriteChannels + uiState.recentChannels).distinctBy { it.id }.take(20)
+    }
+    val heroMovie = uiState.recentMovies.firstOrNull()
+
+    Column(modifier = Modifier.fillMaxSize()) {
+
+        // ── Barra superior ──────────────────────────────────────────────────
+        NowTopBar(
+            onSearch   = { onNavigate(Routes.SEARCH) },
+            onSettings = { onNavigate(Routes.SETTINGS) }
+        )
+
+        Box(modifier = Modifier.weight(1f)) {
         NowPlusBackground()
-        Column(
+        Row(modifier = Modifier.fillMaxSize()) {
+
+            // ── Sidebar Xuper-style ─────────────────────────────────────────
+            Column(
+                modifier = Modifier
+                    .width(168.dp)
+                    .fillMaxHeight()
+                    .background(Color(0xF2080808))
+                    .padding(vertical = 12.dp, horizontal = 10.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
+                DashboardSidebarTextItem(label = "TV EN VIVO",  accentColor = Color(0xFFE8001C), iconType = 0, onClick = { onNavigate(Routes.LIVE_TV)    })
+                DashboardSidebarTextItem(label = "PELÍCULAS",   accentColor = Color(0xFFFFAA00), iconType = 1, onClick = { onNavigate(Routes.MOVIES)     })
+                DashboardSidebarTextItem(label = "SERIES",      accentColor = Color(0xFF8B5CF6), iconType = 2, onClick = { onNavigate(Routes.SERIES)     })
+                DashboardSidebarTextItem(label = "EPG",         accentColor = Color(0xFF3B82F6), iconType = 3, onClick = { onNavigate(Routes.EPG)        })
+                DashboardSidebarTextItem(label = "MULTI VISTA", accentColor = Color(0xFF06B6D4), iconType = 4, onClick = { onNavigate(Routes.MULTI_VIEW) })
+                DashboardSidebarTextItem(label = "CATCH UP",    accentColor = Color(0xFFFF6200), iconType = 5, onClick = { onNavigate(Routes.EPG)        })
+                DashboardSidebarTextItem(label = "AJUSTES",     accentColor = Color(0xFF64748B), iconType = 6, onClick = { onNavigate(Routes.SETTINGS)   })
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Info inferior
+                Column(
+                    modifier = Modifier.padding(horizontal = 6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    if (uiState.stats.liveChannelCount > 0) {
+                        Text(
+                            text = "${uiState.stats.liveChannelCount} canales · ${uiState.stats.movieLibraryCount} pel.",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Color.White.copy(alpha = 0.35f),
+                            maxLines = 1
+                        )
+                    }
+                    Text(
+                        text = expiryText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color.White.copy(alpha = 0.45f),
+                        maxLines = 1
+                    )
+                    Text(
+                        text = uiState.provider?.name ?: "TNET play",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFFE8001C),
+                        maxLines = 1
+                    )
+                }
+            }
+
+            // ── Contenido principal ─────────────────────────────────────────
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxHeight(),
+                contentPadding = PaddingValues(start = 14.dp, end = 18.dp, top = 8.dp, bottom = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp)
+            ) {
+                // Barra de estado
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(modifier = Modifier.size(7.dp).background(
+                                if (isSyncing) Color(0xFFFFAA00) else Color(0xFF22C55E),
+                                RoundedCornerShape(50)
+                            ))
+                            Text(
+                                text = if (isSyncing) "Sincronizando..." else "En línea",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.White.copy(alpha = 0.55f)
+                            )
+                        }
+                        TvIconButton(onClick = onRefresh) { NowRefreshIcon(spinning = isSyncing) }
+                    }
+                }
+
+                // ── Hero Banner: película destacada ─────────────────────────
+                if (heroMovie != null) {
+                    item {
+                        NowHeroBanner(
+                            movie = heroMovie,
+                            onPlay = { onNavigate(Routes.MOVIES) },
+                            onMore = { onNavigate(Routes.MOVIES) }
+                        )
+                    }
+                }
+
+                // ── Canales ─────────────────────────────────────────────────
+                if (channels.isNotEmpty()) {
+                    item {
+                        DashboardSectionHeader(
+                            title = "TV EN VIVO  •  ${uiState.stats.liveChannelCount} canales",
+                            onSeeAll = { onNavigate(Routes.LIVE_TV) }
+                        )
+                    }
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(horizontal = 2.dp)
+                        ) {
+                            items(channels) { channel ->
+                                ChannelCard(channel = channel, onClick = { onChannelClick(channel) })
+                            }
+                        }
+                    }
+                }
+
+                // ── Películas ────────────────────────────────────────────────
+                if (uiState.recentMovies.size > 1) {
+                    item { DashboardSectionHeader(title = "PELÍCULAS RECIENTES", onSeeAll = { onNavigate(Routes.MOVIES) }) }
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(horizontal = 2.dp)
+                        ) {
+                            items(uiState.recentMovies.drop(1).take(20)) { movie ->
+                                MovieCard(movie = movie, onClick = { onNavigate(Routes.MOVIES) }, width = 136.dp, height = 200.dp)
+                            }
+                        }
+                    }
+                }
+
+                // ── Series ──────────────────────────────────────────────────
+                if (uiState.recentSeries.isNotEmpty()) {
+                    item { DashboardSectionHeader(title = "SERIES", onSeeAll = { onNavigate(Routes.SERIES) }) }
+                    item {
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            contentPadding = PaddingValues(horizontal = 2.dp)
+                        ) {
+                            items(uiState.recentSeries.take(20)) { series ->
+                                SeriesCard(series = series, onClick = { onNavigate(Routes.SERIES) })
+                            }
+                        }
+                    }
+                }
+
+                // ── Estado vacío ────────────────────────────────────────────
+                if (channels.isEmpty() && uiState.recentMovies.isEmpty() && uiState.recentSeries.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillMaxWidth().padding(top = 60.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                CircularProgressIndicator(color = Color(0xFFE8001C), modifier = Modifier.size(32.dp))
+                                Text("Cargando contenido...", color = TextTertiary, style = MaterialTheme.typography.bodyMedium)
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── Panel de canales derecha ────────────────────────────────────
+            if (channels.isNotEmpty()) {
+                NowChannelPanel(
+                    channels = channels,
+                    onChannelClick = onChannelClick,
+                    onSeeAll = { onNavigate(Routes.LIVE_TV) }
+                )
+            }
+        }
+        } // Box weight(1f)
+    } // Column fillMaxSize
+}
+
+// ── Panel vertical de canales ─────────────────────────────────────────────────
+
+@Composable
+private fun NowChannelPanel(
+    channels: List<Channel>,
+    onChannelClick: (Channel) -> Unit,
+    onSeeAll: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .width(196.dp)
+            .fillMaxHeight()
+            .background(Color(0xEE050505))
+    ) {
+        // Header
+        Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 22.dp, vertical = 10.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 10.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.weight(1f).fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp)
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                NowBigCard(
-                    channelCount = uiState.stats.liveChannelCount,
-                    lastSyncedAt = uiState.providerHealth.lastSyncedAt,
-                    onClick = { onNavigate(Routes.LIVE_TV) },
-                    modifier = Modifier.weight(1f).fillMaxHeight()
-                )
-                Column(
-                    modifier = Modifier.weight(1.55f).fillMaxHeight(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        NowMediumCard(
-                            title = "PELÍCULAS",
-                            icon = { NowMovieIcon() },
-                            showRefresh = true,
-                            lastSyncedAt = uiState.providerHealth.lastSyncedAt,
-                            onClick = { onNavigate(Routes.MOVIES) },
-                            modifier = Modifier.weight(1.05f).fillMaxHeight(),
-                            accentColor = Color(0xFFFFAA00)
-                        )
-                        NowMediumCard(
-                            title = "DESCARGAR",
-                            icon = { NowDownloadIcon() },
-                            showRefresh = false,
-                            lastSyncedAt = 0L,
-                            onClick = { onNavigate(Routes.SEARCH) },
-                            modifier = Modifier.weight(0.95f).fillMaxHeight(),
-                            accentColor = Color(0xFF00C9A7)
-                        )
-                    }
-                    Row(
-                        modifier = Modifier.weight(0.62f).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        NowSmallCard(
-                            icon = { NowEpgIcon() },
-                            title = "EPG",
-                            onClick = { onNavigate(Routes.EPG) },
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
-                            accentColor = Color(0xFF3B82F6)
-                        )
-                        NowSmallCard(
-                            icon = { NowMultiViewIcon() },
-                            title = "PANTALLA\nMÚLTIPLE",
-                            onClick = { onNavigate(Routes.MULTI_VIEW) },
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
-                            accentColor = Color(0xFF8B5CF6)
-                        )
-                        NowSmallCard(
-                            icon = { NowCatchUpIcon() },
-                            title = "CATCH UP",
-                            onClick = { onNavigate(Routes.EPG) },
-                            modifier = Modifier.weight(1f).fillMaxHeight(),
-                            accentColor = Color(0xFFFF6200)
-                        )
-                    }
-                }
-            }
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp, vertical = 2.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                val expiryText = remember(uiState.providerHealth.expirationDate) {
-                    if (uiState.providerHealth.expirationDate == null) "EXPIRACIÓN: Ilimitado"
-                    else {
-                        val fmt = SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
-                        "EXPIRACIÓN: ${fmt.format(Date(uiState.providerHealth.expirationDate))}"
-                    }
-                }
-                Text(text = expiryText, style = MaterialTheme.typography.labelMedium, color = TextPrimary.copy(alpha = 0.80f))
+                Box(modifier = Modifier.size(7.dp).background(Color(0xFF22C55E), RoundedCornerShape(50)))
                 Text(
-                    text = "Conectado : ${uiState.provider?.name ?: "TNET play"}",
+                    text = "EN VIVO",
                     style = MaterialTheme.typography.labelMedium,
-                    color = TextPrimary.copy(alpha = 0.80f)
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
                 )
             }
+            TvClickableSurface(
+                onClick = onSeeAll,
+                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(6.dp)),
+                colors = ClickableSurfaceDefaults.colors(
+                    containerColor = Color.White.copy(.08f),
+                    focusedContainerColor = Color(0xFFE8001C).copy(.70f)
+                )
+            ) {
+                Text(
+                    text = "VER TODO",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(.70f),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                )
+            }
+        }
+
+        // Divisor
+        Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(Color.White.copy(.08f)))
+
+        // Lista de canales
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 4.dp)
+        ) {
+            items(channels, key = { it.id }) { channel ->
+                NowChannelRow(
+                    channel = channel,
+                    onClick = { onChannelClick(channel) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun NowChannelRow(
+    channel: Channel,
+    onClick: () -> Unit
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(52.dp)
+            .onFocusEvent { isFocused = it.hasFocus },
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(0.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = if (isFocused) Color(0xFFE8001C).copy(.20f) else Color.Transparent,
+            focusedContainerColor = Color(0xFFE8001C).copy(.25f)
+        ),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(BorderStroke(0.dp, Color.Transparent)),
+            focusedBorder = Border(BorderStroke(0.dp, Color.Transparent))
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            // Logo del canal
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.White.copy(.10f)),
+                contentAlignment = Alignment.Center
+            ) {
+                ChannelLogoBadge(
+                    channelName = channel.name,
+                    logoUrl = channel.logoUrl,
+                    shape = RoundedCornerShape(8.dp),
+                    backgroundColor = Color.Transparent,
+                    contentPadding = PaddingValues(4.dp),
+                    textStyle = MaterialTheme.typography.labelSmall,
+                    textColor = Color.White,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            // Nombre
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = channel.name,
+                    style = MaterialTheme.typography.bodySmall,
+                    fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isFocused) Color.White else Color.White.copy(.78f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
+            // Punto de live
+            if (isFocused) {
+                Box(modifier = Modifier.size(6.dp).background(Color(0xFFE8001C), RoundedCornerShape(50)))
+            }
+        }
+    }
+}
+
+// ── Top Bar ──────────────────────────────────────────────────────────────────
+
+@Composable
+private fun NowTopBar(
+    onSearch: () -> Unit,
+    onSettings: () -> Unit
+) {
+    // Reloj actualizado cada minuto
+    var timeText by remember { mutableStateOf("") }
+    LaunchedEffect(Unit) {
+        while (true) {
+            timeText = SimpleDateFormat("hh:mm a", Locale.getDefault()).format(Date())
+            kotlinx.coroutines.delay(30_000L)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(58.dp)
+            .background(Color(0xF5060606))
+            .padding(horizontal = 14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Logo TNET play
+        Image(
+            painter = painterResource(id = R.drawable.tnet_logo),
+            contentDescription = "TNET play",
+            modifier = Modifier.height(46.dp).wrapContentWidth(),
+            contentScale = ContentScale.Fit
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        // Iconos de acción
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            // Buscar
+            NowTopBarIconButton(onClick = onSearch) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Buscar",
+                    tint = Color.White.copy(0.80f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            // Perfil
+            NowTopBarIconButton(onClick = {}) {
+                Canvas(modifier = Modifier.size(20.dp)) {
+                    val cx = size.width/2f; val cy = size.height/2f
+                    drawCircle(Color.White.copy(.80f), size.width*.32f, androidx.compose.ui.geometry.Offset(cx, cy*.72f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.8f))
+                    drawArc(Color.White.copy(.80f), 180f, 180f, false,
+                        androidx.compose.ui.geometry.Offset(cx - size.width*.42f, cy*.10f),
+                        androidx.compose.ui.geometry.Size(size.width*.84f, size.height*.84f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(1.8f))
+                }
+            }
+            // Notificaciones
+            NowTopBarIconButton(onClick = {}) {
+                Canvas(modifier = Modifier.size(20.dp)) {
+                    val w = size.width; val h = size.height
+                    val path = androidx.compose.ui.graphics.Path()
+                    path.moveTo(w*.5f, h*.05f)
+                    path.cubicTo(w*.15f, h*.10f, w*.10f, h*.35f, w*.12f, h*.62f)
+                    path.lineTo(w*.88f, h*.62f)
+                    path.cubicTo(w*.90f, h*.35f, w*.85f, h*.10f, w*.5f, h*.05f)
+                    drawPath(path, Color.White.copy(.80f), style = androidx.compose.ui.graphics.drawscope.Stroke(1.8f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                    drawLine(Color.White.copy(.80f), androidx.compose.ui.geometry.Offset(w*.12f, h*.62f), androidx.compose.ui.geometry.Offset(w*.88f, h*.62f), 1.8f)
+                    drawArc(Color.White.copy(.80f), 0f, 180f, false,
+                        androidx.compose.ui.geometry.Offset(w*.36f, h*.62f),
+                        androidx.compose.ui.geometry.Size(w*.28f, h*.22f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(1.8f))
+                }
+            }
+            // Ajustes
+            NowTopBarIconButton(onClick = onSettings) {
+                Icon(
+                    imageVector = Icons.Default.Settings,
+                    contentDescription = "Ajustes",
+                    tint = Color.White.copy(0.80f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            // Separador
+            Box(modifier = Modifier.width(1.dp).height(22.dp).background(Color.White.copy(0.18f)))
+
+            // Wifi
+            Canvas(modifier = Modifier.size(20.dp).padding(2.dp)) {
+                val cx = size.width/2f; val cy = size.height*.72f
+                for (i in 0..2) {
+                    val r = size.width*(0.22f + i*0.22f)
+                    drawArc(Color.White.copy(if(i==2) .80f else .40f), 200f, 140f, false,
+                        androidx.compose.ui.geometry.Offset(cx-r, cy-r),
+                        androidx.compose.ui.geometry.Size(r*2, r*2),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(1.8f, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
+                drawCircle(Color.White.copy(.90f), 2.5f, androidx.compose.ui.geometry.Offset(cx, cy))
+            }
+
+            // Hora
+            Text(
+                text = timeText,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White.copy(0.88f),
+                modifier = Modifier.padding(start = 4.dp, end = 2.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun NowTopBarIconButton(
+    onClick: () -> Unit,
+    content: @Composable () -> Unit
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    Surface(
+        onClick = onClick,
+        modifier = Modifier.size(36.dp).onFocusEvent { isFocused = it.hasFocus },
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(8.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = if (isFocused) Color.White.copy(.14f) else Color.Transparent,
+            focusedContainerColor = Color.White.copy(.18f)
+        ),
+        border = ClickableSurfaceDefaults.border(
+            focusedBorder = Border(BorderStroke(1.5.dp, Color.White.copy(.35f)))
+        )
+    ) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            content()
+        }
+    }
+}
+
+// ── Hero Banner ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun NowHeroBanner(
+    movie: Movie,
+    onPlay: () -> Unit,
+    onMore: () -> Unit
+) {
+    var isFocusedPlay by remember { mutableStateOf(false) }
+    var isFocusedMore by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(210.dp)
+            .clip(RoundedCornerShape(16.dp))
+    ) {
+        // Fondo: poster de la película como background
+        if (!movie.backdropUrl.isNullOrBlank() || !movie.posterUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = rememberCrossfadeImageModel(movie.backdropUrl ?: movie.posterUrl),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+        } else {
+            Box(modifier = Modifier.fillMaxSize().background(
+                Brush.linearGradient(listOf(Color(0xFF1A0A00), Color(0xFF0D0D1A)))
+            ))
+        }
+
+        // Gradiente oscuro de izquierda hacia derecha (más oscuro a la izquierda para el texto)
+        Box(modifier = Modifier.fillMaxSize().background(
+            Brush.horizontalGradient(
+                colors = listOf(
+                    Color.Black.copy(alpha = 0.92f),
+                    Color.Black.copy(alpha = 0.70f),
+                    Color.Black.copy(alpha = 0.20f)
+                ),
+                startX = 0f,
+                endX = Float.POSITIVE_INFINITY
+            )
+        ))
+        // Gradiente bottom
+        Box(modifier = Modifier.fillMaxSize().background(
+            Brush.verticalGradient(
+                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
+                startY = 80f,
+                endY = Float.POSITIVE_INFINITY
+            )
+        ))
+
+        // Contenido del banner
+        Row(modifier = Modifier.fillMaxSize()) {
+            // Info del lado izquierdo (70%)
+            Column(
+                modifier = Modifier
+                    .weight(0.62f)
+                    .fillMaxHeight()
+                    .padding(horizontal = 22.dp, vertical = 18.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Badge
+                Box(
+                    modifier = Modifier
+                        .background(Color(0xFFE8001C), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text("DESTACADO", style = MaterialTheme.typography.labelSmall, color = Color.White, fontWeight = FontWeight.Bold)
+                }
+
+                // Título y detalles
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = movie.name,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (!movie.year.isNullOrBlank()) {
+                            Text(movie.year!!, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(0.65f))
+                        }
+                        if (movie.rating != null && movie.rating!! > 0f) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(3.dp)
+                            ) {
+                                Canvas(modifier = Modifier.size(10.dp)) {
+                                    val c = size.width / 2f
+                                    val path = Path()
+                                    for (i in 0..4) {
+                                        val outer = Math.toRadians((i * 72 - 90).toDouble())
+                                        val inner = Math.toRadians((i * 72 - 90 + 36).toDouble())
+                                        if (i == 0) path.moveTo(c + (c * Math.cos(outer)).toFloat(), c + (c * Math.sin(outer)).toFloat())
+                                        else path.lineTo(c + (c * Math.cos(outer)).toFloat(), c + (c * Math.sin(outer)).toFloat())
+                                        path.lineTo(c + (c * 0.4f * Math.cos(inner)).toFloat(), c + (c * 0.4f * Math.sin(inner)).toFloat())
+                                    }
+                                    path.close()
+                                    drawPath(path, Color(0xFFFFAA00))
+                                }
+                                Text(
+                                    text = "%.1f".format(movie.rating!! / 10f * 10f),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color(0xFFFFAA00)
+                                )
+                            }
+                        }
+                        if (!movie.genre.isNullOrBlank()) {
+                            Text(movie.genre!!, style = MaterialTheme.typography.labelSmall, color = Color.White.copy(0.50f), maxLines = 1)
+                        }
+                    }
+
+                    // Botones
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        // Botón VER
+                        Surface(
+                            onClick = onPlay,
+                            modifier = Modifier
+                                .height(38.dp)
+                                .onFocusEvent { isFocusedPlay = it.hasFocus },
+                            shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
+                            colors = ClickableSurfaceDefaults.colors(
+                                containerColor = Color(0xFFE8001C),
+                                focusedContainerColor = Color(0xFFFF2233)
+                            ),
+                            border = ClickableSurfaceDefaults.border(
+                                focusedBorder = Border(BorderStroke(2.dp, Color.White))
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Canvas(modifier = Modifier.size(10.dp)) {
+                                    val p = Path()
+                                    p.moveTo(0f, 0f); p.lineTo(size.width, size.height / 2f); p.lineTo(0f, size.height); p.close()
+                                    drawPath(p, Color.White)
+                                }
+                                Text("▶  VER", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Color.White)
+                            }
+                        }
+                        // Botón MÁS INFO
+                        Surface(
+                            onClick = onMore,
+                            modifier = Modifier
+                                .height(38.dp)
+                                .onFocusEvent { isFocusedMore = it.hasFocus },
+                            shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
+                            colors = ClickableSurfaceDefaults.colors(
+                                containerColor = Color.White.copy(alpha = 0.15f),
+                                focusedContainerColor = Color.White.copy(alpha = 0.28f)
+                            ),
+                            border = ClickableSurfaceDefaults.border(
+                                focusedBorder = Border(BorderStroke(2.dp, Color.White))
+                            )
+                        ) {
+                            Text(
+                                "MÁS INFO",
+                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Poster del lado derecho (38%) — solo en pantallas anchas
+            Box(
+                modifier = Modifier
+                    .weight(0.38f)
+                    .fillMaxHeight()
+                    .padding(end = 18.dp, top = 16.dp, bottom = 16.dp)
+            ) {
+                if (!movie.posterUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = rememberCrossfadeImageModel(movie.posterUrl),
+                        contentDescription = movie.name,
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .align(Alignment.CenterEnd)
+                            .clip(RoundedCornerShape(10.dp))
+                    )
+                    // Gradiente izquierdo sobre el poster para que se fusione
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(60.dp)
+                            .align(Alignment.CenterStart)
+                            .background(Brush.horizontalGradient(listOf(Color.Black.copy(0.80f), Color.Transparent)))
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ── Sidebar item ─────────────────────────────────────────────────────────────
+
+@Composable
+private fun DashboardSidebarTextItem(
+    label: String,
+    accentColor: Color,
+    iconType: Int,
+    onClick: () -> Unit
+) {
+    var isFocused by remember { mutableStateOf(false) }
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(46.dp)
+            .onFocusEvent { isFocused = it.hasFocus },
+        shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
+        colors = ClickableSurfaceDefaults.colors(
+            containerColor = if (isFocused) accentColor else Color.Transparent,
+            focusedContainerColor = accentColor
+        ),
+        border = ClickableSurfaceDefaults.border(
+            border = Border(BorderStroke(0.dp, Color.Transparent)),
+            focusedBorder = Border(BorderStroke(0.dp, Color.Transparent))
+        )
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            SidebarMiniIcon(
+                type = iconType,
+                color = if (isFocused) Color.White else accentColor
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (isFocused) FontWeight.Bold else FontWeight.Normal,
+                color = if (isFocused) Color.White else Color.White.copy(alpha = 0.70f),
+                maxLines = 1
+            )
+        }
+    }
+}
+
+@Composable
+private fun SidebarMiniIcon(type: Int, color: Color) {
+    val capR = androidx.compose.ui.graphics.StrokeCap.Round
+    val sw = 1.8f
+    Canvas(modifier = Modifier.size(18.dp)) {
+        val w = size.width; val h = size.height
+        when (type) {
+            // TV
+            0 -> {
+                val body = androidx.compose.ui.geometry.Rect(w*.06f, h*.22f, w*.94f, h*.78f)
+                drawRoundRect(color.copy(.20f), body.topLeft, body.size, androidx.compose.ui.geometry.CornerRadius(5f))
+                drawRoundRect(color, body.topLeft, body.size, androidx.compose.ui.geometry.CornerRadius(5f), style = androidx.compose.ui.graphics.drawscope.Stroke(sw))
+                drawLine(color, androidx.compose.ui.geometry.Offset(w*.38f, h*.22f), androidx.compose.ui.geometry.Offset(w*.28f, h*.08f), sw, capR)
+                drawLine(color, androidx.compose.ui.geometry.Offset(w*.62f, h*.22f), androidx.compose.ui.geometry.Offset(w*.72f, h*.08f), sw, capR)
+                drawLine(color.copy(.6f), androidx.compose.ui.geometry.Offset(w*.5f, h*.78f), androidx.compose.ui.geometry.Offset(w*.5f, h*.90f), sw, capR)
+                drawLine(color.copy(.6f), androidx.compose.ui.geometry.Offset(w*.30f, h*.90f), androidx.compose.ui.geometry.Offset(w*.70f, h*.90f), sw, capR)
+                // play
+                val pr = h*.10f; val cx = w*.5f; val cy = h*.50f
+                val t = Path().apply { moveTo(cx-pr*.4f, cy-pr*.65f); lineTo(cx+pr*.75f, cy); lineTo(cx-pr*.4f, cy+pr*.65f); close() }
+                drawPath(t, color.copy(.90f))
+            }
+            // Película
+            1 -> {
+                val cx = w/2f; val cy = h*.54f; val r = h*.32f
+                drawCircle(color.copy(.18f), r+4f, androidx.compose.ui.geometry.Offset(cx,cy))
+                drawCircle(color, r, androidx.compose.ui.geometry.Offset(cx,cy), style = androidx.compose.ui.graphics.drawscope.Stroke(sw))
+                val t = Path().apply { moveTo(cx-r*.35f, cy-r*.55f); lineTo(cx+r*.65f, cy); lineTo(cx-r*.35f, cy+r*.55f); close() }
+                drawPath(t, color)
+                // líneas clapper arriba
+                drawLine(color.copy(.5f), androidx.compose.ui.geometry.Offset(w*.1f, h*.18f), androidx.compose.ui.geometry.Offset(w*.9f, h*.18f), sw)
+                drawLine(color.copy(.3f), androidx.compose.ui.geometry.Offset(w*.30f, h*.08f), androidx.compose.ui.geometry.Offset(w*.22f, h*.18f), sw, capR)
+                drawLine(color.copy(.3f), androidx.compose.ui.geometry.Offset(w*.55f, h*.08f), androidx.compose.ui.geometry.Offset(w*.47f, h*.18f), sw, capR)
+            }
+            // Series
+            2 -> {
+                for (i in 0..2) {
+                    val top = h*(0.14f + i*0.27f); val btm = h*(0.34f + i*0.27f)
+                    val left = w*(0.06f + i*0.06f); val right = w*(0.80f + i*0.04f)
+                    drawRoundRect(color.copy(if(i==2) .80f else .30f), androidx.compose.ui.geometry.Offset(left,top),
+                        androidx.compose.ui.geometry.Size(right-left, btm-top), androidx.compose.ui.geometry.CornerRadius(4f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(sw))
+                }
+                val cx = w*.38f; val cy = h*.64f; val pr = h*.10f
+                val t = Path().apply { moveTo(cx-pr*.4f, cy-pr*.65f); lineTo(cx+pr*.75f, cy); lineTo(cx-pr*.4f, cy+pr*.65f); close() }
+                drawPath(t, color)
+            }
+            // EPG
+            3 -> {
+                val body = androidx.compose.ui.geometry.Rect(w*.06f, h*.12f, w*.94f, h*.92f)
+                drawRoundRect(color.copy(.15f), body.topLeft, body.size, androidx.compose.ui.geometry.CornerRadius(4f))
+                drawRoundRect(color, body.topLeft, body.size, androidx.compose.ui.geometry.CornerRadius(4f), style = androidx.compose.ui.graphics.drawscope.Stroke(sw))
+                // header
+                drawRoundRect(color.copy(.70f), body.topLeft, androidx.compose.ui.geometry.Size(body.width, h*.22f), androidx.compose.ui.geometry.CornerRadius(4f))
+                // row bars
+                for (i in 0..2) {
+                    val top = h*(0.40f + i*0.175f)
+                    drawRoundRect(if(i==0) color.copy(.75f) else color.copy(.25f), androidx.compose.ui.geometry.Offset(w*.12f,top), androidx.compose.ui.geometry.Size(w*.35f, h*.10f), androidx.compose.ui.geometry.CornerRadius(2f))
+                    drawRoundRect(color.copy(.18f), androidx.compose.ui.geometry.Offset(w*.52f,top), androidx.compose.ui.geometry.Size(w*.36f, h*.10f), androidx.compose.ui.geometry.CornerRadius(2f))
+                }
+            }
+            // Multi Vista
+            4 -> {
+                val gap = w*.07f; val cw = (w-gap*3f)/2f; val ch = (h-gap*3f)/2f
+                for (row in 0..1) for (col in 0..1) {
+                    val left = gap + col*(cw+gap); val top = gap + row*(ch+gap)
+                    drawRoundRect(
+                        if(row==0&&col==0) color.copy(.30f) else color.copy(.12f),
+                        androidx.compose.ui.geometry.Offset(left,top), androidx.compose.ui.geometry.Size(cw,ch), androidx.compose.ui.geometry.CornerRadius(3f))
+                    drawRoundRect(
+                        if(row==0&&col==0) color else color.copy(.45f),
+                        androidx.compose.ui.geometry.Offset(left,top), androidx.compose.ui.geometry.Size(cw,ch), androidx.compose.ui.geometry.CornerRadius(3f),
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(if(row==0&&col==0) sw+0.5f else sw-0.3f))
+                    if(row==0&&col==0) {
+                        val cx2=left+cw/2f; val cy2=top+ch/2f; val pr=cw*.25f
+                        val t = Path().apply { moveTo(cx2-pr*.4f,cy2-pr*.6f); lineTo(cx2+pr*.7f,cy2); lineTo(cx2-pr*.4f,cy2+pr*.6f); close() }
+                        drawPath(t, color)
+                    }
+                }
+            }
+            // Catch Up
+            5 -> {
+                val cx = w*.54f; val cy = h*.52f; val r = h*.32f
+                drawCircle(color.copy(.15f), r, androidx.compose.ui.geometry.Offset(cx,cy))
+                drawCircle(color, r, androidx.compose.ui.geometry.Offset(cx,cy), style = androidx.compose.ui.graphics.drawscope.Stroke(sw))
+                // manecillas
+                val ha = Math.toRadians(-60.0)
+                drawLine(Color.White.copy(.8f), androidx.compose.ui.geometry.Offset(cx,cy), androidx.compose.ui.geometry.Offset(cx+(r*.42f*Math.cos(ha)).toFloat(), cy+(r*.42f*Math.sin(ha)).toFloat()), sw+.5f, capR)
+                val ma = Math.toRadians(-90.0)
+                drawLine(color, androidx.compose.ui.geometry.Offset(cx,cy), androidx.compose.ui.geometry.Offset(cx+(r*.62f*Math.cos(ma)).toFloat(), cy+(r*.62f*Math.sin(ma)).toFloat()), sw, capR)
+                drawCircle(color, 2.5f, androidx.compose.ui.geometry.Offset(cx,cy))
+                // flecha rewind
+                drawLine(color.copy(.7f), androidx.compose.ui.geometry.Offset(cx-r*.85f,cy), androidx.compose.ui.geometry.Offset(cx-r*.55f,cy-r*.30f), sw, capR)
+                drawLine(color.copy(.7f), androidx.compose.ui.geometry.Offset(cx-r*.85f,cy), androidx.compose.ui.geometry.Offset(cx-r*.55f,cy+r*.30f), sw, capR)
+            }
+            // Ajustes (settings gear)
+            else -> {
+                val cx = w/2f; val cy = h/2f; val ro = h*.34f; val ri = h*.20f
+                drawCircle(color.copy(.15f), ro, androidx.compose.ui.geometry.Offset(cx,cy))
+                drawCircle(color, ri, androidx.compose.ui.geometry.Offset(cx,cy), style = androidx.compose.ui.graphics.drawscope.Stroke(sw))
+                for (i in 0..7) {
+                    val a = Math.toRadians((i * 45).toDouble())
+                    val x1 = cx + (ro*.72f * Math.cos(a)).toFloat(); val y1 = cy + (ro*.72f * Math.sin(a)).toFloat()
+                    val x2 = cx + (ro * Math.cos(a)).toFloat(); val y2 = cy + (ro * Math.sin(a)).toFloat()
+                    drawLine(color, androidx.compose.ui.geometry.Offset(x1,y1), androidx.compose.ui.geometry.Offset(x2,y2), sw+.4f, capR)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DashboardSectionHeader(
+    title: String,
+    onSeeAll: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(text = title, style = MaterialTheme.typography.titleSmall, color = TextPrimary, fontWeight = FontWeight.Bold)
+        TvButton(
+            onClick = onSeeAll,
+            colors = ButtonDefaults.colors(containerColor = SurfaceElevated, focusedContainerColor = SurfaceHighlight)
+        ) {
+            Text("VER TODO →", style = MaterialTheme.typography.labelSmall, color = OnSurfaceDim)
         }
     }
 }
@@ -1043,10 +1831,25 @@ private fun NowBigCard(
     channelCount: Int,
     lastSyncedAt: Long,
     onClick: () -> Unit,
+    onRefresh: () -> Unit = {},
+    isSyncing: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val accent = Color(0xFFE8001C)
     val lastUpdated = remember(lastSyncedAt) { nowFormatTimeAgo(lastSyncedAt) }
+    val fillProgress = remember { Animatable(0f) }
+    val wavePhase = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    fun triggerWave() {
+        scope.launch {
+            fillProgress.snapTo(0f)
+            wavePhase.snapTo(0f)
+            launch { wavePhase.animateTo(4f * Math.PI.toFloat(), tween(1200, easing = LinearEasing)) }
+            fillProgress.animateTo(1f, tween(750, easing = FastOutSlowInEasing))
+            fillProgress.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
+        }
+        onRefresh()
+    }
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier,
@@ -1062,10 +1865,34 @@ private fun NowBigCard(
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1.015f)
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Colored top-glow overlay
             Box(modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(listOf(accent.copy(0.22f), accent.copy(0.06f), Color.Transparent))
             ))
+            // Water fill overlay
+            val fp = fillProgress.value
+            if (fp > 0f) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val w = size.width; val h = size.height
+                    val waterY = h * (1f - fp)
+                    val amp = 18f
+                    val phase = wavePhase.value
+                    fun wavePath(yOffset: Float, phaseShift: Float): Path {
+                        val p = Path()
+                        val y0 = waterY + yOffset + (amp * kotlin.math.sin(phaseShift.toDouble())).toFloat()
+                        p.moveTo(0f, y0)
+                        var x = 3f
+                        while (x <= w) {
+                            val y = waterY + yOffset + (amp * kotlin.math.sin((x / w * 2.0 * Math.PI + phase + phaseShift).toDouble())).toFloat()
+                            p.lineTo(x, y.toFloat())
+                            x += 3f
+                        }
+                        p.lineTo(w, h); p.lineTo(0f, h); p.close()
+                        return p
+                    }
+                    drawPath(wavePath(0f, 0f), color = accent.copy(alpha = 0.30f))
+                    drawPath(wavePath(8f, Math.PI.toFloat() * 0.6f), color = accent.copy(alpha = 0.18f))
+                }
+            }
             Column(
                 modifier = Modifier.fillMaxSize().padding(18.dp),
                 verticalArrangement = Arrangement.SpaceBetween
@@ -1094,8 +1921,14 @@ private fun NowBigCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(text = "Actualizado: $lastUpdated", style = MaterialTheme.typography.labelSmall, color = TextPrimary.copy(alpha = 0.50f), modifier = Modifier.weight(1f))
-                    Box(modifier = Modifier.size(28.dp).background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) {
-                        NowRefreshIcon()
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp))
+                            .clickable { triggerWave() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        NowRefreshIcon(spinning = isSyncing)
                     }
                 }
             }
@@ -1110,10 +1943,25 @@ private fun NowMediumCard(
     showRefresh: Boolean,
     lastSyncedAt: Long,
     onClick: () -> Unit,
+    onRefresh: () -> Unit = {},
+    isSyncing: Boolean = false,
     modifier: Modifier = Modifier,
     accentColor: Color = Color(0xFFFFAA00)
 ) {
     val lastUpdated = remember(lastSyncedAt) { nowFormatTimeAgo(lastSyncedAt) }
+    val fillProgress = remember { Animatable(0f) }
+    val wavePhase = remember { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    fun triggerWave() {
+        scope.launch {
+            fillProgress.snapTo(0f)
+            wavePhase.snapTo(0f)
+            launch { wavePhase.animateTo(4f * Math.PI.toFloat(), tween(1200, easing = LinearEasing)) }
+            fillProgress.animateTo(1f, tween(750, easing = FastOutSlowInEasing))
+            fillProgress.animateTo(0f, tween(450, easing = FastOutSlowInEasing))
+        }
+        onRefresh()
+    }
     TvClickableSurface(
         onClick = onClick,
         modifier = modifier,
@@ -1132,13 +1980,44 @@ private fun NowMediumCard(
             Box(modifier = Modifier.fillMaxSize().background(
                 Brush.verticalGradient(listOf(accentColor.copy(0.16f), accentColor.copy(0.04f), Color.Transparent))
             ))
+            // Water fill overlay
+            val fp = fillProgress.value
+            if (fp > 0f) {
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    val w = size.width; val h = size.height
+                    val waterY = h * (1f - fp)
+                    val amp = 14f
+                    val phase = wavePhase.value
+                    fun wavePath(yOffset: Float, phaseShift: Float): Path {
+                        val p = Path()
+                        val y0 = waterY + yOffset + (amp * kotlin.math.sin(phaseShift.toDouble())).toFloat()
+                        p.moveTo(0f, y0)
+                        var x = 3f
+                        while (x <= w) {
+                            val y = waterY + yOffset + (amp * kotlin.math.sin((x / w * 2.0 * Math.PI + phase + phaseShift).toDouble())).toFloat()
+                            p.lineTo(x, y.toFloat())
+                            x += 3f
+                        }
+                        p.lineTo(w, h); p.lineTo(0f, h); p.close()
+                        return p
+                    }
+                    drawPath(wavePath(0f, 0f), color = accentColor.copy(alpha = 0.32f))
+                    drawPath(wavePath(6f, Math.PI.toFloat() * 0.6f), color = accentColor.copy(alpha = 0.18f))
+                }
+            }
             Column(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.SpaceBetween) {
                 Text(text = title, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold), color = TextPrimary)
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) { icon() }
                 if (showRefresh) {
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                         Text(text = "Actualizado: $lastUpdated", style = MaterialTheme.typography.labelSmall, color = TextPrimary.copy(alpha = 0.45f), modifier = Modifier.weight(1f))
-                        Box(modifier = Modifier.size(26.dp).background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp)), contentAlignment = Alignment.Center) { NowRefreshIcon() }
+                        Box(
+                            modifier = Modifier
+                                .size(26.dp)
+                                .background(Color.White.copy(alpha = 0.10f), RoundedCornerShape(7.dp))
+                                .clickable { triggerWave() },
+                            contentAlignment = Alignment.Center
+                        ) { NowRefreshIcon(spinning = isSyncing) }
                     }
                 }
             }
@@ -1260,30 +2139,38 @@ private fun NowMovieIcon() {
 }
 
 @Composable
-private fun NowDownloadIcon() {
-    val teal = Color(0xFF00C9A7)
-    val cap = androidx.compose.ui.graphics.StrokeCap.Round
+private fun NowSeriesIcon() {
+    val purple = Color(0xFF8B5CF6)
+    val purpleDark = Color(0xFF6D28D9)
     Canvas(modifier = Modifier.size(76.dp)) {
         val w = size.width; val h = size.height
-        val cx = w / 2f; val cy = h * 0.48f
+        val cx = w / 2f; val cy = h / 2f
         // Glow
-        drawCircle(Brush.radialGradient(listOf(teal.copy(0.22f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.50f), radius = w * 0.50f, center = Offset(cx, cy))
-        // Cloud body (filled)
-        val cloud = androidx.compose.ui.geometry.Rect(w * 0.14f, h * 0.10f, w * 0.86f, h * 0.50f)
-        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF0D2420), Color(0xFF061510)), startY = cloud.top, endY = cloud.bottom), topLeft = cloud.topLeft, size = cloud.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(cloud.height / 2))
-        drawRoundRect(teal.copy(0.90f), topLeft = cloud.topLeft, size = cloud.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(cloud.height / 2), style = androidx.compose.ui.graphics.drawscope.Stroke(3f))
-        // Down arrow shaft (teal)
-        drawLine(teal, Offset(cx, h * 0.48f), Offset(cx, h * 0.74f), 5f, cap = cap)
-        // Arrow head (filled teal)
-        val tri = Path().apply {
-            moveTo(cx - w * 0.20f, h * 0.60f)
-            lineTo(cx, h * 0.80f)
-            lineTo(cx + w * 0.20f, h * 0.60f); close()
+        drawCircle(Brush.radialGradient(listOf(purple.copy(0.28f), Color.Transparent), center = Offset(cx, cy), radius = w * 0.52f), radius = w * 0.52f, center = Offset(cx, cy))
+        // Back card (offset top-right)
+        val back = androidx.compose.ui.geometry.Rect(w * 0.24f, h * 0.08f, w * 0.92f, h * 0.66f)
+        drawRoundRect(Brush.verticalGradient(listOf(purpleDark.copy(0.55f), purpleDark.copy(0.20f)), startY = back.top, endY = back.bottom), topLeft = back.topLeft, size = back.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f))
+        drawRoundRect(purple.copy(0.40f), topLeft = back.topLeft, size = back.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(10f), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+        // Middle card
+        val mid = androidx.compose.ui.geometry.Rect(w * 0.12f, h * 0.20f, w * 0.80f, h * 0.78f)
+        drawRoundRect(Brush.verticalGradient(listOf(purpleDark.copy(0.70f), Color(0xFF1A0A30)), startY = mid.top, endY = mid.bottom), topLeft = mid.topLeft, size = mid.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f))
+        drawRoundRect(purple.copy(0.60f), topLeft = mid.topLeft, size = mid.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(12f), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+        // Front card (main screen)
+        val front = androidx.compose.ui.geometry.Rect(w * 0.04f, h * 0.32f, w * 0.72f, h * 0.90f)
+        drawRoundRect(Brush.verticalGradient(listOf(Color(0xFF1E0A3C), Color(0xFF0D0520)), startY = front.top, endY = front.bottom), topLeft = front.topLeft, size = front.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(14f))
+        drawRoundRect(Brush.verticalGradient(listOf(purple, purpleDark), startY = front.top, endY = front.bottom), topLeft = front.topLeft, size = front.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(14f), style = androidx.compose.ui.graphics.drawscope.Stroke(2.5f))
+        // Play button on front card
+        val pcx = front.left + front.width * 0.42f
+        val pcy = front.top + front.height * 0.50f
+        val pr = front.width * 0.22f
+        drawCircle(purple.copy(0.25f), radius = pr, center = Offset(pcx, pcy))
+        val play = Path().apply {
+            moveTo(pcx - pr * 0.35f, pcy - pr * 0.55f)
+            lineTo(pcx + pr * 0.65f, pcy)
+            lineTo(pcx - pr * 0.35f, pcy + pr * 0.55f)
+            close()
         }
-        drawPath(tri, teal)
-        // Base tray
-        val tray = androidx.compose.ui.geometry.Rect(w * 0.14f, h * 0.84f, w * 0.86f, h * 0.92f)
-        drawRoundRect(Brush.horizontalGradient(listOf(teal.copy(0.60f), Color(0xFF00C9A7)), startX = tray.left, endX = tray.right), topLeft = tray.topLeft, size = tray.size, cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f))
+        drawPath(play, Brush.linearGradient(listOf(Color.White, purple.copy(0.85f)), start = Offset(pcx - pr * 0.3f, pcy - pr * 0.3f), end = Offset(pcx + pr * 0.3f, pcy + pr * 0.3f)))
     }
 }
 
@@ -1393,18 +2280,26 @@ private fun NowCatchUpIcon() {
 }
 
 @Composable
-private fun NowRefreshIcon() {
-    Canvas(modifier = Modifier.size(16.dp)) {
+private fun NowRefreshIcon(spinning: Boolean = false) {
+    val infiniteTransition = rememberInfiniteTransition(label = "refresh_spin")
+    val angle by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 900, easing = LinearEasing)
+        ),
+        label = "refresh_angle"
+    )
+    Canvas(modifier = Modifier.size(16.dp).graphicsLayer { rotationZ = if (spinning) angle else 0f }) {
         val w = size.width; val h = size.height
-        val white = Color.White.copy(alpha = 0.80f)
+        val white = Color.White
         val cap = androidx.compose.ui.graphics.StrokeCap.Round
-        val cx = w / 2f; val cy = h / 2f; val r = w * 0.34f
+        val cx = w / 2f; val cy = h / 2f; val r = w * 0.36f
         drawArc(white, startAngle = -180f, sweepAngle = 270f, useCenter = false,
             topLeft = Offset(cx - r, cy - r), size = androidx.compose.ui.geometry.Size(r * 2, r * 2),
-            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 2f, cap = cap))
-        // Arrow head pointing clockwise
-        drawLine(white, Offset(cx - r, cy - 1f), Offset(cx - r + 5f, cy - 5f), 2f, cap = cap)
-        drawLine(white, Offset(cx - r, cy - 1f), Offset(cx - r + 5f, cy + 4f), 2f, cap = cap)
+            style = androidx.compose.ui.graphics.drawscope.Stroke(width = 3.2f, cap = cap))
+        drawLine(white, Offset(cx - r, cy - 1f), Offset(cx - r + 5.5f, cy - 5.5f), 3.2f, cap = cap)
+        drawLine(white, Offset(cx - r, cy - 1f), Offset(cx - r + 5.5f, cy + 4.5f), 3.2f, cap = cap)
     }
 }
 

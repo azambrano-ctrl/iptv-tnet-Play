@@ -497,7 +497,7 @@
     <string name="settings_about_subtitle">Version, build, and support details for this installation.</string>
     <string name="settings_app_version">App Version</string>
     <string name="settings_build">Build</string>
-    <string name="settings_build_desc">TNET play for Android TV</string>
+    <string name="settings_build_desc">TNET play para Android TV</string>
     <string name="settings_build_verification">Build Verification</string>
     <string name="settings_build_verification_official">Official build</string>
     <string name="settings_build_verification_unofficial">Unofficial build</string>
@@ -505,9 +505,9 @@
     <string name="settings_enabled">Enabled</string>
     <string name="settings_disabled">Disabled</string>
     <string name="settings_developed_by">Developed by</string>
-    <string name="settings_developer_name">David Nashash</string>
+    <string name="settings_developer_name">ROAIMA S.A</string>
     <string name="settings_github">GitHub</string>
-    <string name="settings_github_url">https://github.com/Davidona</string>
+    <string name="settings_github_url">https://github.com/azambrano-ctrl/iptv-tnet-Play</string>
     <string name="settings_donate">Support on Ko-fi</string>
     <string name="settings_donate_url">https://ko-fi.com/davidona</string>
     <string name="settings_updates_title">Updates</string>

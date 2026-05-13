@@ -948,6 +948,21 @@ private fun ProviderTextField(
                             fieldValue = fieldValue.copy(selection = TextRange(nextCursor))
                             true
                         }
+                        android.view.KeyEvent.KEYCODE_DPAD_DOWN,
+                        android.view.KeyEvent.KEYCODE_ENTER,
+                        android.view.KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                            acceptsInput = false
+                            pendingInputActivation = false
+                            keyboardController?.hide()
+                            coroutineScope.launch {
+                                delay(80)
+                                runCatching {
+                                    nextFocusRequester?.requestFocus()
+                                        ?: containerFocusRequester.requestFocus()
+                                }
+                            }
+                            true
+                        }
                         else -> false
                     }
                 }

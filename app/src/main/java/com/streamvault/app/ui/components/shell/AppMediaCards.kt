@@ -107,7 +107,7 @@ fun LiveChannelRowCard(
 
     Box(
         modifier = modifier
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(if (isComfortable) 18.dp else 14.dp))
             .background(AppColors.SurfaceElevated)
             .fillMaxWidth()
             .height(rowHeight)
@@ -119,11 +119,28 @@ fun LiveChannelRowCard(
             horizontalArrangement = Arrangement.spacedBy(contentSpacing),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // ── Número de canal (columna fija a la izquierda) ──────────────
+            if (channel.number > 0 && !isDense) {
+                Box(
+                    modifier = Modifier.width(if (isComfortable) 36.dp else 28.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = channel.number.toString(),
+                        style = if (isComfortable) MaterialTheme.typography.titleMedium
+                                else MaterialTheme.typography.bodyMedium,
+                        color = AppColors.TextTertiary,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            // ── Logo ────────────────────────────────────────────────────────
             Box(
                 modifier = Modifier
                     .width(logoWidth)
                     .fillMaxHeight()
-                    .clip(RoundedCornerShape(12.dp))
+                    .clip(RoundedCornerShape(10.dp))
             ) {
                 ChannelLogoBadge(
                     channelName = channel.name,
@@ -135,51 +152,26 @@ fun LiveChannelRowCard(
                     modifier = Modifier.fillMaxSize()
                 )
             }
+
+            // ── Nombre + EPG ─────────────────────────────────────────────────
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
-                if (!isDense) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(badgeSpacing),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        StatusPill(label = stringResource(R.string.card_live_badge), containerColor = AppColors.Live)
-                        sourceBadgeLabel?.takeIf { it.isNotBlank() }?.let { label ->
-                            StatusPill(
-                                label = label,
-                                containerColor = AppColors.SurfaceEmphasis,
-                                contentColor = AppColors.TextPrimary
-                            )
-                        }
-                        if (channel.isFavorite) {
-                            StatusPill(label = stringResource(R.string.badge_saved), containerColor = AppColors.Warning, contentColor = Color.Black)
-                        }
-                        if (channel.catchUpSupported) {
-                            StatusPill(label = stringResource(R.string.badge_catch_up), containerColor = AppColors.Brand)
-                        }
-                    }
-                }
+                // Nombre del canal
                 Text(
-                    text = buildString {
-                        val numberLabel = channel.number.takeIf { it > 0 }?.toString()?.padStart(2, '0')
-                        if (numberLabel != null) {
-                            append(numberLabel)
-                            append("  ")
-                        } else if (channel.number == 0) {
-                            append("--  ")
-                        }
-                        append(channel.name)
-                    },
+                    text = channel.name,
                     style = when {
                         isDense -> MaterialTheme.typography.bodyLarge
                         isComfortable -> MaterialTheme.typography.titleMedium
                         else -> MaterialTheme.typography.titleSmall
                     },
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                     color = AppColors.TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+                // EPG / programa actual
                 val program = channel.currentProgram
                 if (program != null) {
                     Text(
@@ -193,14 +185,14 @@ fun LiveChannelRowCard(
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
-                    val totalDuration = (program.endTime - program.startTime).coerceAtLeast(1L)
-                    val elapsed = (nowMs - program.startTime).coerceAtLeast(0L)
                     if (!isDense) {
+                        val totalDuration = (program.endTime - program.startTime).coerceAtLeast(1L)
+                        val elapsed = (nowMs - program.startTime).coerceAtLeast(0L)
                         LinearProgressIndicator(
                             progress = { (elapsed.toFloat() / totalDuration.toFloat()).coerceIn(0f, 1f) },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(if (isComfortable) 4.dp else 2.dp)
+                                .height(if (isComfortable) 4.dp else 3.dp)
                                 .clip(RoundedCornerShape(999.dp)),
                             color = AppColors.Brand,
                             trackColor = AppColors.SurfaceEmphasis
@@ -212,6 +204,24 @@ fun LiveChannelRowCard(
                         style = if (isDense) MaterialTheme.typography.labelMedium else MaterialTheme.typography.bodySmall,
                         color = AppColors.TextTertiary
                     )
+                }
+
+                // Badges (favorito, catch-up) solo en comfortable
+                if (isComfortable && !isDense) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(badgeSpacing),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        sourceBadgeLabel?.takeIf { it.isNotBlank() }?.let { label ->
+                            StatusPill(label = label, containerColor = AppColors.SurfaceEmphasis, contentColor = AppColors.TextPrimary)
+                        }
+                        if (channel.isFavorite) {
+                            StatusPill(label = stringResource(R.string.badge_saved), containerColor = AppColors.Warning, contentColor = Color.Black)
+                        }
+                        if (channel.catchUpSupported) {
+                            StatusPill(label = stringResource(R.string.badge_catch_up), containerColor = AppColors.Brand)
+                        }
+                    }
                 }
             }
         }

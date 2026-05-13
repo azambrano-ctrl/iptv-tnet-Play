@@ -76,7 +76,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import com.streamvault.app.R
 import com.streamvault.app.MainActivity
-import com.streamvault.app.cast.CastConnectionState
 import com.streamvault.app.ui.components.PlayerRenderView
 import com.streamvault.app.ui.design.requestFocusSafely
 import com.streamvault.app.ui.screens.player.overlay.ChannelInfoOverlay
@@ -201,7 +200,6 @@ fun PlayerScreen(
     val mediaTitle by viewModel.mediaTitle.collectAsStateWithLifecycle()
     val playbackSpeed by viewModel.playbackSpeed.collectAsStateWithLifecycle()
     val audioVideoOffsetState by viewModel.audioVideoOffsetUiState.collectAsStateWithLifecycle()
-    val castConnectionState by viewModel.castConnectionState.collectAsStateWithLifecycle()
     val seekPreview by viewModel.seekPreview.collectAsStateWithLifecycle()
     val preventStandbyDuringPlayback by viewModel.preventStandbyDuringPlayback.collectAsStateWithLifecycle()
     val timeshiftUiState by viewModel.timeshiftUiState.collectAsStateWithLifecycle()
@@ -976,9 +974,9 @@ fun PlayerScreen(
             onOpenSplitScreen = { showSplitDialog = true },
             onEnterPictureInPicture = enterPictureInPicture,
             onToggleMute = viewModel::toggleMute,
-            isCastConnected = castConnectionState == CastConnectionState.CONNECTED,
-            onCast = { viewModel.castCurrentMedia { mainActivity?.openCastRouteChooser() } },
-            onStopCasting = viewModel::stopCasting,
+            isCastConnected = false,
+            onCast = {},
+            onStopCasting = {},
             onSeekToLiveEdge = viewModel::seekToLiveEdge,
             onSeekToPosition = viewModel::seekTo,
             onSetScrubbingMode = viewModel::setScrubbingMode,
@@ -1100,7 +1098,7 @@ fun PlayerScreen(
                 }
             )
             PlayerAudioVideoOffsetDialog(
-                visible = showAudioVideoOffsetDialog && castConnectionState != CastConnectionState.CONNECTED,
+                visible = showAudioVideoOffsetDialog,
                 state = audioVideoOffsetState,
                 canSaveChannel = currentChannel != null,
                 onDismiss = {
@@ -1265,9 +1263,9 @@ fun PlayerScreen(
                     onOpenVariants = { showVariantSelection = true },
                     onOpenAudioVideoSync = { showAudioVideoOffsetDialog = true },
                     onEnterPictureInPicture = enterPictureInPicture,
-                    isCastConnected = castConnectionState == CastConnectionState.CONNECTED,
-                    onCast = { viewModel.castCurrentMedia { mainActivity?.openCastRouteChooser() } },
-                    onStopCasting = viewModel::stopCasting,
+                    isCastConnected = false,
+                    onCast = {},
+                    onStopCasting = {},
                     timeshiftUiState = timeshiftUiState,
                     onTransientPanelVisibilityChanged = { channelInfoSubPanelOpen = it }
                 )

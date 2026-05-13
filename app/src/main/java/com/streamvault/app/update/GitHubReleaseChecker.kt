@@ -27,7 +27,7 @@ class GitHubReleaseChecker @Inject constructor(
     private val okHttpClient: OkHttpClient
 ) {
     private companion object {
-        private const val RELEASES_LATEST_URL = "https://api.github.com/repos/Davidona/StreamVault-IPTV/releases/latest"
+        private const val RELEASES_LATEST_URL = "https://api.github.com/repos/azambrano-ctrl/iptv-tnet-Play/releases/latest"
         private const val MAX_RESPONSE_BYTES = 512 * 1024L
         private val STRUCTURED_TAG_REGEX = Regex("""^v?(.+?)\+(\d+)$""", RegexOption.IGNORE_CASE)
     }
@@ -123,7 +123,7 @@ class GitHubReleaseChecker @Inject constructor(
             val name = asset.optString("name")
             val url = asset.optString("browser_download_url").takeIf { it.isNotBlank() } ?: continue
             if (!isHttpsUrl(url)) continue
-            if (name.equals("StreamVault.apk", ignoreCase = true)) {
+            if (name.equals("TNETplay.apk", ignoreCase = true)) {
                 return url
             }
             if (fallback == null && name.endsWith(".apk", ignoreCase = true)) {

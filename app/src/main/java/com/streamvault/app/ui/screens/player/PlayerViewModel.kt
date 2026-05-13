@@ -3,10 +3,6 @@ package com.streamvault.app.ui.screens.player
 import android.os.SystemClock
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.streamvault.app.cast.CastConnectionState
-import com.streamvault.app.cast.CastManager
-import com.streamvault.app.cast.CastMediaRequest
-import com.streamvault.app.cast.CastStartResult
 import com.streamvault.app.di.MainPlayerEngine
 import com.streamvault.app.player.LivePreviewHandoffManager
 import com.streamvault.app.ui.model.orderedByRequestedRawIds
@@ -93,7 +89,6 @@ class PlayerViewModel @Inject constructor(
     internal val recordingManager: RecordingManager,
     private val watchNextManager: WatchNextManager,
     private val launcherRecommendationsManager: LauncherRecommendationsManager,
-    internal val castManager: CastManager,
     private val xtreamStreamUrlResolver: XtreamStreamUrlResolver,
     private val seekThumbnailProvider: SeekThumbnailProvider,
     private val livePreviewHandoffManager: LivePreviewHandoffManager,
@@ -328,7 +323,6 @@ class PlayerViewModel @Inject constructor(
     private var playbackTimerDefaultsApplied = false
     private var sleepTimerExitEmitted = false
 
-    val castConnectionState: StateFlow<CastConnectionState> = castManager.connectionState
 
     private fun setActivePlayerEngine(engine: PlayerEngine) {
         if (activePlayerEngineFlow.value === engine) return

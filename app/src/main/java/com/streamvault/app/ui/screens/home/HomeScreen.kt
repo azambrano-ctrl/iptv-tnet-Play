@@ -278,7 +278,7 @@ fun HomeScreen(
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_live_tv),
             subtitle = uiState.activeLiveSourceTitle.ifBlank { uiState.provider?.name },
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.None,
             compactHeader = true,
             showScreenHeader = false
         ) {

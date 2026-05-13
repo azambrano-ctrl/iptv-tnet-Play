@@ -1066,25 +1066,30 @@ class Media3PlayerEngine @Inject constructor(
                     }
                     if (hasAudioGroups && trackController.availableAudioTracks.value.isEmpty()) {
                         audioCodecUnsupportedReported = true
-                        val mimeTypes = tracks.groups
-                            .filter { it.mediaTrackGroup.type == C.TRACK_TYPE_AUDIO }
+                        val audioGroups = tracks.groups.filter {
+                            it.mediaTrackGroup.type == C.TRACK_TYPE_AUDIO
+                        }
+                        val mimeTypes = audioGroups
                             .flatMap { g -> (0 until g.length).mapNotNull { g.mediaTrackGroup.getFormat(it).sampleMimeType } }
                             .distinct()
                             .joinToString()
-                        Log.w(TAG, "audio-codec-unsupported mimeTypes=$mimeTypes target=${PlaybackLogSanitizer.sanitizeUrl(lastStreamInfo?.url.orEmpty())}")
-                        // Try to re-enable the audio track with relaxed capabilities (allows
-                        // passthrough attempt even when isTrackSupported returned false).
-                        exoPlayer?.trackSelectionParameters = exoPlayer?.trackSelectionParameters
-                            ?.buildUpon()
+                        Log.w(TAG, "audio-codec-unsupported mimeTypes=$mimeTypes target=${PlaybackLogSanitizer.sanitizeUrl(lastStreamInfo?.url.orEmpty())} — forcing override")
+                        // Force-select all audio tracks via TrackSelectionOverride, bypassing
+                        // ExoPlayer's conservative capability check. Many codecs (e.g. MPEG-1/2
+                        // audio) are actually decodable by the device even when isTrackSupported
+                        // returns false. setTrackTypeDisabled alone does not retrigger selection.
+                        val paramsBuilder = exoPlayer?.trackSelectionParameters?.buildUpon()
                             ?.setTrackTypeDisabled(C.TRACK_TYPE_AUDIO, false)
-
-                            ?.build()
                             ?: return
-                        _error.tryEmit(
-                            PlayerError.DecoderError(
-                                "Sin audio: codec $mimeTypes no soportado en este dispositivo."
+                        for (group in audioGroups) {
+                            paramsBuilder.setOverrideForType(
+                                androidx.media3.common.TrackSelectionOverride(
+                                    group.mediaTrackGroup,
+                                    (0 until group.length).toList()
+                                )
                             )
-                        )
+                        }
+                        exoPlayer?.trackSelectionParameters = paramsBuilder.build()
                     }
                 }
             }

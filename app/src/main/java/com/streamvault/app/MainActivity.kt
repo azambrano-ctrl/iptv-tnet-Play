@@ -12,8 +12,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
-import com.streamvault.app.cast.CastManager
-import com.streamvault.app.cast.CastRouteChooserActivity
 import com.streamvault.app.device.isTelevisionDevice
 import com.streamvault.app.localization.resolveAppLocale
 import com.streamvault.app.navigation.AppNavigation
@@ -78,9 +76,6 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var tvInputChannelSyncManager: TvInputChannelSyncManager
-
-    @Inject
-    lateinit var castManager: CastManager
 
     private val _pictureInPictureModeFlow = MutableStateFlow(false)
     val pictureInPictureModeFlow: StateFlow<Boolean> = _pictureInPictureModeFlow.asStateFlow()
@@ -217,10 +212,6 @@ class MainActivity : ComponentActivity() {
 
     fun enterPlayerPictureInPictureModeFromPlayer(): Boolean {
         return enterPlayerPictureInPictureModeIfEligible(requirePlaying = false)
-    }
-
-    fun openCastRouteChooser() {
-        startActivity(Intent(this, CastRouteChooserActivity::class.java))
     }
 
     private fun enterPlayerPictureInPictureModeIfEligible(requirePlaying: Boolean = true): Boolean {
