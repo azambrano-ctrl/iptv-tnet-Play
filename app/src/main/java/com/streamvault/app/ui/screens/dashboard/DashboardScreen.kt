@@ -1018,31 +1018,6 @@ private fun NowPlusDashboard(
                 contentPadding = PaddingValues(start = 14.dp, end = 18.dp, top = 8.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Barra de estado
-                item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(modifier = Modifier.size(7.dp).background(
-                                if (isSyncing) Color(0xFFFFAA00) else Color(0xFF22C55E),
-                                RoundedCornerShape(50)
-                            ))
-                            Text(
-                                text = if (isSyncing) "Sincronizando..." else "En línea",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.White.copy(alpha = 0.55f)
-                            )
-                        }
-                        TvIconButton(onClick = onRefresh) { NowRefreshIcon(spinning = isSyncing) }
-                    }
-                }
-
                 // ── Hero Banner: película destacada ─────────────────────────
                 if (heroMovie != null) {
                     item {
