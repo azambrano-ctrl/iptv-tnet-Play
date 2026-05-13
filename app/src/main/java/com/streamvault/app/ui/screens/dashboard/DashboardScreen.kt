@@ -111,6 +111,8 @@ import java.util.Locale
 import com.streamvault.app.ui.interaction.TvClickableSurface
 import com.streamvault.app.ui.interaction.TvButton
 import com.streamvault.app.ui.interaction.TvIconButton
+import com.streamvault.app.update.AppUpdateDownloadState
+import com.streamvault.app.update.AppUpdateDownloadStatus
 
 @Composable
 fun DashboardScreen(
@@ -125,6 +127,7 @@ fun DashboardScreen(
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val updateDownloadState by viewModel.updateDownloadState.collectAsStateWithLifecycle()
     val recordingChannelIds by viewModel.recordingChannelIds.collectAsStateWithLifecycle()
     val scheduledChannelIds by viewModel.scheduledChannelIds.collectAsStateWithLifecycle()
     val provider = uiState.provider
@@ -159,7 +162,10 @@ fun DashboardScreen(
                 onNavigate = onNavigate,
                 onRefresh = viewModel::refreshProvider,
                 isSyncing = uiState.isSyncing,
-                onChannelClick = { channel -> onRecentChannelClick(channel, uiState.provider?.id) }
+                onChannelClick = { channel -> onRecentChannelClick(channel, uiState.provider?.id) },
+                onStartDownload = viewModel::startUpdateDownload,
+                onInstallUpdate = viewModel::installDownloadedUpdate,
+                updateDownloadState = updateDownloadState
             )
         }
 
@@ -938,7 +944,10 @@ private fun NowPlusDashboard(
     onNavigate: (String) -> Unit,
     onRefresh: () -> Unit = {},
     isSyncing: Boolean = false,
-    onChannelClick: (Channel) -> Unit = {}
+    onChannelClick: (Channel) -> Unit = {},
+    onStartDownload: () -> Unit = {},
+    onInstallUpdate: () -> Unit = {},
+    updateDownloadState: AppUpdateDownloadState = AppUpdateDownloadState()
 ) {
     val expiryText = remember(uiState.providerHealth.expirationDate) {
         if (uiState.providerHealth.expirationDate == null) "Sin expiración"
@@ -959,6 +968,19 @@ private fun NowPlusDashboard(
             onSearch   = { onNavigate(Routes.SEARCH) },
             onSettings = { onNavigate(Routes.SETTINGS) }
         )
+
+        // ── Banner de actualización ─────────────────────────────────────────
+        val updateNotice = uiState.updateNotice
+        if (updateNotice != null) {
+            UpdateBanner(
+                versionName = updateNotice.latestVersionName,
+                installReady = updateNotice.installReady,
+                downloadStatus = updateDownloadState.status,
+                onDownload = onStartDownload,
+                onInstall = onInstallUpdate,
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
 
         Box(modifier = Modifier.weight(1f)) {
         NowPlusBackground()
@@ -1357,6 +1379,64 @@ private fun NowTopBar(
                 color = Color.White.copy(0.88f),
                 modifier = Modifier.padding(start = 4.dp, end = 2.dp)
             )
+        }
+    }
+}
+
+@Composable
+private fun UpdateBanner(
+    versionName: String,
+    installReady: Boolean,
+    downloadStatus: AppUpdateDownloadStatus,
+    onDownload: () -> Unit,
+    onInstall: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDownloading = downloadStatus == AppUpdateDownloadStatus.Downloading
+    Row(
+        modifier = modifier
+            .background(Color(0xFF1A1200))
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(8.dp)
+                .clip(RoundedCornerShape(50))
+                .background(Color(0xFFFFAA00))
+        )
+        Text(
+            text = "Nueva versión $versionName disponible",
+            style = MaterialTheme.typography.labelMedium,
+            color = Color.White.copy(alpha = 0.85f),
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+        when {
+            installReady -> {
+                TvButton(onClick = onInstall) {
+                    Text("Instalar", style = MaterialTheme.typography.labelMedium)
+                }
+            }
+            isDownloading -> {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = Color(0xFFFFAA00),
+                    strokeWidth = 2.dp
+                )
+                Text(
+                    text = "Descargando...",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.White.copy(alpha = 0.6f)
+                )
+            }
+            else -> {
+                TvButton(onClick = onDownload) {
+                    Text("Descargar", style = MaterialTheme.typography.labelMedium)
+                }
+            }
         }
     }
 }

@@ -50,6 +50,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import com.streamvault.app.update.AppUpdateDownloadState
+import com.streamvault.app.update.GitHubReleaseInfo
 import com.streamvault.domain.util.AdultContentVisibilityPolicy
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -85,6 +87,8 @@ class DashboardViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState: StateFlow<DashboardUiState> = _uiState.asStateFlow()
+
+    val updateDownloadState: StateFlow<AppUpdateDownloadState> = appUpdateInstaller.downloadState
 
     private val _recordingChannelIds = MutableStateFlow<Set<Long>>(emptySet())
     val recordingChannelIds: StateFlow<Set<Long>> = _recordingChannelIds.asStateFlow()
@@ -409,8 +413,9 @@ class DashboardViewModel @Inject constructor(
     private fun observeUpdateNotice(): Flow<DashboardUpdateNotice?> = combine(
         preferencesRepository.cachedAppUpdateVersionName,
         preferencesRepository.cachedAppUpdateVersionCode,
+        preferencesRepository.cachedAppUpdateDownloadUrl,
         preferencesRepository.downloadedAppUpdateVersionName
-    ) { latestVersionName, latestVersionCode, downloadedVersionName ->
+    ) { latestVersionName, latestVersionCode, downloadUrl, downloadedVersionName ->
         if (latestVersionName.isNullOrBlank()) {
             return@combine null
         }
@@ -427,6 +432,7 @@ class DashboardViewModel @Inject constructor(
 
         DashboardUpdateNotice(
             latestVersionName = latestVersionName,
+            downloadUrl = downloadUrl,
             installReady = downloadedVersionName == latestVersionName
         )
     }
@@ -556,6 +562,22 @@ class DashboardViewModel @Inject constructor(
         return 0
     }
 
+    fun startUpdateDownload() {
+        val notice = _uiState.value.updateNotice ?: return
+        val downloadUrl = notice.downloadUrl ?: return
+        val releaseInfo = GitHubReleaseInfo(
+            versionName = notice.latestVersionName,
+            versionCode = null,
+            releaseUrl = "",
+            downloadUrl = downloadUrl,
+            releaseNotes = "",
+            publishedAt = null
+        )
+        viewModelScope.launch {
+            appUpdateInstaller.startDownload(releaseInfo)
+        }
+    }
+
     fun installDownloadedUpdate() {
         viewModelScope.launch {
             when (val result = appUpdateInstaller.installDownloadedUpdate()) {
@@ -628,6 +650,7 @@ data class DashboardUiState(
 
 data class DashboardUpdateNotice(
     val latestVersionName: String,
+    val downloadUrl: String? = null,
     val installReady: Boolean
 )
 
