@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.Icons
@@ -775,6 +776,49 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             contentPadding = PaddingValues(bottom = 16.dp)
                         ) {
+                        // Quick-access: Dashboard / Inicio
+                        item(key = "inicio_dashboard") {
+                            TvClickableSurface(
+                                onClick = { onNavigate(Routes.HOME) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+                                colors = ClickableSurfaceDefaults.colors(
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    focusedContainerColor = Color.White.copy(alpha = 0.18f)
+                                ),
+                                border = ClickableSurfaceDefaults.border(
+                                    focusedBorder = Border(
+                                        border = BorderStroke(2.dp, FocusBorder),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                ),
+                                scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Home,
+                                        contentDescription = null,
+                                        tint = OnBackground,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.nav_home),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = OnBackground,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
+
                         // Quick-access: Search shortcut
                         item(key = "busca_search") {
                             TvClickableSurface(
