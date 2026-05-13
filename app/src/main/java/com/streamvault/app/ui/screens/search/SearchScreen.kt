@@ -516,7 +516,7 @@ fun SearchScreen(
         onNavigate = onNavigate,
         title = stringResource(R.string.search_title),
         subtitle = stringResource(R.string.search_screen_subtitle),
-        navigationChrome = AppNavigationChrome.TopBar,
+        navigationChrome = AppNavigationChrome.Rail,
         compactHeader = true,
         showScreenHeader = false
     ) {

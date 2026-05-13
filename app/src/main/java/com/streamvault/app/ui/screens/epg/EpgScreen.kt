@@ -292,7 +292,7 @@ fun FullEpgScreen(
         onNavigate = onNavigate,
         title = stringResource(R.string.nav_epg),
         subtitle = stringResource(R.string.guide_shell_subtitle),
-        navigationChrome = AppNavigationChrome.TopBar,
+        navigationChrome = AppNavigationChrome.Rail,
         topBarVisible = topNavVisible,
         compactHeader = true,
         showScreenHeader = false

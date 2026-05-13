@@ -119,7 +119,7 @@ fun DashboardScreen(
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_home),
             subtitle = provider?.name,
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.Rail,
             compactHeader = true,
             showScreenHeader = false
         ) {

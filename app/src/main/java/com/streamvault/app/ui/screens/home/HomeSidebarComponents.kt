@@ -2,6 +2,8 @@ package com.streamvault.app.ui.screens.home
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
@@ -123,135 +125,122 @@ internal fun LivePreviewPane(
     errorMessage: String?,
     modifier: Modifier = Modifier
 ) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(18.dp),
-        colors = SurfaceDefaults.colors(containerColor = SurfaceElevated.copy(alpha = 0.72f))
+    Box(
+        modifier = modifier
+            .background(Color.Black, RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp))
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Text(
-                text = stringResource(R.string.live_preview_title),
-                style = MaterialTheme.typography.titleSmall,
-                color = Primary
+        // Video fullscreen
+        if (channel != null && playerEngine != null && errorMessage == null) {
+            PlayerRenderView(
+                playerEngine = playerEngine,
+                resizeMode = PlayerSurfaceResizeMode.FILL,
+                surfaceType = PlayerRenderSurfaceType.SURFACE_VIEW,
+                modifier = Modifier.fillMaxSize()
             )
+        } else {
+            // Placeholder cuando no hay preview
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(Color(0xFF1A0000), Color(0xFF0D0D0D))
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Canvas(modifier = Modifier.size(48.dp)) {
+                        val w = size.width; val h = size.height
+                        drawRoundRect(
+                            color = Color(0xFF333333),
+                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(8f)
+                        )
+                        val path = androidx.compose.ui.graphics.Path().apply {
+                            moveTo(w * 0.38f, h * 0.28f)
+                            lineTo(w * 0.72f, h * 0.50f)
+                            lineTo(w * 0.38f, h * 0.72f)
+                            close()
+                        }
+                        drawPath(path, color = Color(0xFFE8001C))
+                    }
+                    Text(
+                        text = "Selecciona un canal",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
 
+        // Loading spinner
+        if (isLoading && channel != null) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = Color(0xFFE8001C),
+                    strokeWidth = 3.dp,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+        }
+
+        // Bottom gradient overlay con info del canal
+        if (channel != null) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .aspectRatio(16f / 9f)
-                    .background(Color.Black, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                if (channel != null && playerEngine != null && errorMessage == null) {
-                    PlayerRenderView(
-                        playerEngine = playerEngine,
-                        resizeMode = PlayerSurfaceResizeMode.FIT,
-                        surfaceType = PlayerRenderSurfaceType.SURFACE_VIEW,
-                        modifier = Modifier.fillMaxSize()
+                    .align(Alignment.BottomStart)
+                    .background(
+                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                            listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
+                        )
                     )
-                } else {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(horizontal = 20.dp)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.live_preview_placeholder_title),
-                            style = MaterialTheme.typography.titleSmall,
-                            color = OnBackground,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = errorMessage ?: stringResource(R.string.live_preview_placeholder_subtitle),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = OnSurfaceDim,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-
-                if (isLoading && channel != null) {
-                    Row(
-                        modifier = Modifier
-                            .background(Color.Black.copy(alpha = 0.62f), RoundedCornerShape(12.dp))
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        CircularProgressIndicator(
-                            color = Primary,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Text(
-                            text = stringResource(R.string.live_preview_loading),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-
-            if (channel != null) {
-                Text(
-                    text = channel.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = OnBackground
-                )
-                channel.currentProgram?.let { program ->
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(
+                        text = channel.name,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    channel.currentProgram?.let { program ->
                         Text(
                             text = program.title,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = OnBackground
-                        )
-                        val appTimeFormat = LocalAppTimeFormat.current
-                        val timeFormat = remember(appTimeFormat) { appTimeFormat.createTimeFormat() }
-                        Text(
-                            text = stringResource(
-                                R.string.time_range_format,
-                                timeFormat.format(Date(program.startTime)),
-                                timeFormat.format(Date(program.endTime))
-                            ),
                             style = MaterialTheme.typography.bodySmall,
-                            color = OnSurfaceDim
+                            color = Color.White.copy(alpha = 0.80f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                         LinearProgressIndicator(
                             progress = { program.progressPercent() },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(4.dp),
-                            color = Primary,
-                            trackColor = SurfaceHighlight
+                                .height(3.dp)
+                                .padding(top = 2.dp),
+                            color = Color(0xFFE8001C),
+                            trackColor = Color.White.copy(alpha = 0.25f)
                         )
-                        if (program.description.isNotBlank()) {
-                            Text(
-                                text = program.description,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = OnSurface,
-                                maxLines = 4,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                        }
                     }
-                } ?: Text(
-                    text = stringResource(R.string.live_preview_no_epg),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = OnSurfaceDim
-                )
-
-                Text(
-                    text = stringResource(R.string.live_preview_open_hint),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Primary
-                )
+                }
             }
         }
+
+        // Borde rojo TNET sutil
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .border(1.dp, Color(0xFFE8001C).copy(alpha = 0.3f), RoundedCornerShape(16.dp))
+        )
     }
 }
 
@@ -291,51 +280,44 @@ internal fun CategoryItem(
                 } else false
             },
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = if (isSelected) Primary.copy(alpha = 0.15f) else Color.Transparent,
-            focusedContainerColor = SurfaceHighlight.copy(alpha = 0.82f),
-            contentColor = if (isSelected) Primary else OnSurface
+            containerColor = if (isSelected) Color(0xFFE8001C) else Color.Transparent,
+            focusedContainerColor = Color(0xFFE8001C).copy(alpha = 0.75f),
+            contentColor = Color.White
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(3.dp, FocusBorder),
+                border = BorderStroke(2.dp, Color(0xFFFF4500)),
                 shape = RoundedCornerShape(10.dp)
             )
         )
     ) {
         Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             if (isPinned) {
                 PinnedCategoryGlyph(
-                    tint = if (isFocused) OnBackground else if (isSelected) Primary else OnSurfaceDim,
+                    tint = Color.White,
                     modifier = Modifier.padding(end = 8.dp)
                 )
             }
             Text(
                 text = category.name,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.titleSmall,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                color = if (isFocused) OnBackground else if (isSelected) Primary else OnSurface,
+                color = Color.White,
                 modifier = Modifier.weight(1f)
             )
-
-            Text(
-                text = category.count.toString(),
-                style = MaterialTheme.typography.labelMedium,
-                color = if (isFocused) OnBackground else OnSurfaceDim,
-                modifier = Modifier.padding(start = 10.dp)
-            )
-
             if (isLocked) {
                 Text(
-                    text = stringResource(R.string.home_locked_short),
+                    text = "🔒",
                     style = MaterialTheme.typography.labelSmall,
-                    color = if (isFocused) OnBackground else OnSurfaceDim,
+                    color = Color.White.copy(alpha = 0.7f),
                     modifier = Modifier.padding(start = 8.dp)
                 )
             }

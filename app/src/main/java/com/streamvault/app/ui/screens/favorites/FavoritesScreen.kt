@@ -363,7 +363,7 @@ fun FavoritesScreen(
             onNavigate = onNavigate,
             title = stringResource(R.string.favorites_title),
             subtitle = stringResource(R.string.saved_shell_subtitle),
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.Rail,
             compactHeader = true,
             showScreenHeader = false
         ) {

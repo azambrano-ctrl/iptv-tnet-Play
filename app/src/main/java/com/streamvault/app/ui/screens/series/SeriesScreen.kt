@@ -157,7 +157,7 @@ fun SeriesScreen(
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_series),
             subtitle = null,
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.Rail,
             compactHeader = true,
             showScreenHeader = false
         ) {

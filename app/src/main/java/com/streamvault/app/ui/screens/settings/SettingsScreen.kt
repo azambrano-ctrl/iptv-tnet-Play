@@ -346,7 +346,7 @@ fun SettingsScreen(
             onNavigate = { if (!uiState.isSyncing) onNavigate(it) },
             title = stringResource(R.string.settings_title),
             subtitle = stringResource(R.string.settings_providers_subtitle),
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.Rail,
             compactHeader = true,
             showScreenHeader = false
         ) {

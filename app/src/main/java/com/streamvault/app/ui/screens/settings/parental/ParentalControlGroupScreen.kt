@@ -120,7 +120,7 @@ fun ParentalControlGroupScreen(
         onNavigate = onNavigate,
         title = stringResource(R.string.settings_provider_category_controls_title),
         subtitle = stringResource(R.string.settings_provider_category_controls_subtitle),
-        navigationChrome = AppNavigationChrome.TopBar,
+        navigationChrome = AppNavigationChrome.Rail,
         compactHeader = true,
         showScreenHeader = false,
         header = {

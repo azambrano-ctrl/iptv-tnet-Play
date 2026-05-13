@@ -277,7 +277,7 @@ fun HomeScreen(
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_live_tv),
             subtitle = uiState.activeLiveSourceTitle.ifBlank { uiState.provider?.name },
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.Rail,
             compactHeader = true,
             showScreenHeader = false
         ) {
@@ -817,16 +817,27 @@ fun HomeScreen(
                     }
                 }
 
-                // Content - Channel Grid / Pro Preview
+                // Content - Xuper TV style: Video preview center + Channel list right
                 Row(
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight(),
-                    horizontalArrangement = Arrangement.spacedBy(if (isProMode) 12.dp else 0.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
+                    // Video preview - always visible in center
+                    LivePreviewPane(
+                        channel = previewChannel,
+                        playerEngine = uiState.previewPlayerEngine,
+                        isLoading = uiState.isPreviewLoading,
+                        errorMessage = uiState.previewErrorMessage,
+                        modifier = Modifier
+                            .weight(1.4f)
+                            .fillMaxHeight()
+                    )
+
                     Column(
                         modifier = Modifier
-                            .weight(if (isProMode) 1.08f else 1f)
+                            .weight(1f)
                             .fillMaxHeight()
                     ) {
                         Column(
@@ -1158,6 +1169,9 @@ fun HomeScreen(
                                             .onFocusChanged { focusState ->
                                                 if (focusState.isFocused) {
                                                     lastFocusedChannelId = channel.id
+                                                    if (!isReorderMode && !isChannelLocked(channel)) {
+                                                        viewModel.previewChannel(channel)
+                                                    }
                                                 }
                                             }
                                             .onPreviewKeyEvent { event ->
@@ -1186,17 +1200,6 @@ fun HomeScreen(
                         } // Crossfade
                     }
 
-                    if (isProMode) {
-                        LivePreviewPane(
-                            channel = previewChannel,
-                            playerEngine = uiState.previewPlayerEngine,
-                            isLoading = uiState.isPreviewLoading,
-                            errorMessage = uiState.previewErrorMessage,
-                            modifier = Modifier
-                                .weight(0.92f)
-                                .fillMaxHeight()
-                        )
-                    }
                 }
                 }
             }

@@ -156,7 +156,7 @@ fun MoviesScreen(
             onNavigate = onNavigate,
             title = stringResource(R.string.nav_movies),
             subtitle = null,
-            navigationChrome = AppNavigationChrome.TopBar,
+            navigationChrome = AppNavigationChrome.Rail,
             compactHeader = true,
             showScreenHeader = false
         ) {
