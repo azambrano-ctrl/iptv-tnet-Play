@@ -1266,7 +1266,7 @@ private fun NowTopBar(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(58.dp)
+            .height(70.dp)
             .background(Color(0xF5060606))
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -1275,7 +1275,7 @@ private fun NowTopBar(
         Image(
             painter = painterResource(id = R.drawable.tnet_logo),
             contentDescription = "TNET play",
-            modifier = Modifier.height(46.dp).wrapContentWidth(),
+            modifier = Modifier.height(60.dp).wrapContentWidth(),
             contentScale = ContentScale.Fit
         )
 
