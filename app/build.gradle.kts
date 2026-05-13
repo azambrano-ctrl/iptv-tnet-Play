@@ -1,4 +1,4 @@
-import java.util.Properties
+﻿import java.util.Properties
 import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.MessageDigest
@@ -48,8 +48,8 @@ android {
         applicationId = "com.tnet.play"
         minSdk = 28
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 9
+        versionName = "1.5.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "OFFICIAL_APPLICATION_ID", "\"com.streamvault.app\"")
         buildConfigField("String", "OFFICIAL_SIGNING_CERT_SHA256", "\"$officialSigningCertSha256\"")
@@ -177,7 +177,6 @@ dependencies {
     implementation(libs.appcompat)
     implementation(libs.core.splashscreen)
     implementation(libs.mediarouter)
-    implementation(libs.play.services.cast.framework)
 
     // Test
     testImplementation(libs.junit)
@@ -190,3 +189,4 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }
+

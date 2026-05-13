@@ -117,6 +117,23 @@ internal fun CompactSplitLauncherButton(
 }
 
 @Composable
+internal fun LiveFullScreenBackground(
+    playerEngine: PlayerEngine?,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier.background(Color.Black)) {
+        if (playerEngine != null) {
+            PlayerRenderView(
+                playerEngine = playerEngine,
+                resizeMode = PlayerSurfaceResizeMode.FILL,
+                surfaceType = PlayerRenderSurfaceType.SURFACE_VIEW,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
 internal fun LivePreviewPane(
     channel: Channel?,
     playerEngine: PlayerEngine?,

@@ -31,6 +31,7 @@ import androidx.compose.foundation.focusGroup
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.Icons
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
@@ -569,16 +570,29 @@ fun HomeScreen(
                         }
                     }
                 ) {
-                Row(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    // Full-screen live video background
+                    LiveFullScreenBackground(
+                        playerEngine = uiState.previewPlayerEngine,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Dark scrim for overlay readability
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.30f))
+                    )
+                    // Floating overlay panels (sidebar + channel list)
+                    Row(modifier = Modifier.fillMaxSize()) {
                     // Sidebar - Categories
                     val categorySearchFocusRequester = remember { FocusRequester() }
                     val focusManager = LocalFocusManager.current
-                    
+
                     Column(
                         modifier = Modifier
                             .width(sidebarWidth)
                             .fillMaxHeight()
-                            .background(SurfaceElevated.copy(alpha = 0.88f), RoundedCornerShape(20.dp))
+                            .background(Color.Black.copy(alpha = 0.88f), RoundedCornerShape(20.dp))
                             .padding(top = 10.dp)
                             .focusGroup()
                     ) {
@@ -761,6 +775,48 @@ fun HomeScreen(
                             modifier = Modifier.fillMaxWidth(),
                             contentPadding = PaddingValues(bottom = 16.dp)
                         ) {
+                        // Quick-access: Search shortcut
+                        item(key = "busca_search") {
+                            TvClickableSurface(
+                                onClick = { onNavigate(Routes.SEARCH) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(12.dp)),
+                                colors = ClickableSurfaceDefaults.colors(
+                                    containerColor = Color.White.copy(alpha = 0.06f),
+                                    focusedContainerColor = Color.White.copy(alpha = 0.18f)
+                                ),
+                                border = ClickableSurfaceDefaults.border(
+                                    focusedBorder = Border(
+                                        border = BorderStroke(2.dp, FocusBorder),
+                                        shape = RoundedCornerShape(12.dp)
+                                    )
+                                ),
+                                scale = ClickableSurfaceDefaults.scale(focusedScale = 1f)
+                            ) {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Search,
+                                        contentDescription = null,
+                                        tint = OnBackground,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.search_title),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = OnBackground,
+                                        maxLines = 1
+                                    )
+                                }
+                            }
+                        }
 
                         items(
                             items = visibleCategories,
@@ -817,17 +873,17 @@ fun HomeScreen(
                     }
                 }
 
-                // Content - Channel Grid / Pro Preview
+                // Content - Channel Grid (floating overlay panel)
                 Row(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxHeight(),
-                    horizontalArrangement = Arrangement.spacedBy(if (isProMode) 12.dp else 0.dp)
+                        .fillMaxHeight()
                 ) {
                     Column(
                         modifier = Modifier
-                            .weight(if (isProMode) 1.08f else 1f)
+                            .width(390.dp)
                             .fillMaxHeight()
+                            .background(Color.Black.copy(alpha = 0.78f))
                     ) {
                         Column(
                             modifier = Modifier
@@ -1186,19 +1242,9 @@ fun HomeScreen(
                         } // Crossfade
                     }
 
-                    if (isProMode) {
-                        LivePreviewPane(
-                            channel = previewChannel,
-                            playerEngine = uiState.previewPlayerEngine,
-                            isLoading = uiState.isPreviewLoading,
-                            errorMessage = uiState.previewErrorMessage,
-                            modifier = Modifier
-                                .weight(0.92f)
-                                .fillMaxHeight()
-                        )
-                    }
                 }
-                }
+                } // end overlay Row
+                } // end fullscreen Box
             }
         }
         }
