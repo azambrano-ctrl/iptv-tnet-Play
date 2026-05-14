@@ -637,11 +637,7 @@ fun HomeScreen(
                                 modifier = Modifier.padding(bottom = 10.dp),
                                 enabled = !isReorderMode
                             )
-                            val shouldShowQuickFiltersControl = when (uiState.liveTvQuickFilterVisibilityMode) {
-                                LiveTvQuickFilterVisibilityMode.HIDE -> false
-                                LiveTvQuickFilterVisibilityMode.SHOW_WHEN_FILTERS_AVAILABLE -> uiState.savedCategoryFilters.isNotEmpty()
-                                LiveTvQuickFilterVisibilityMode.ALWAYS_VISIBLE -> true
-                            }
+                            val shouldShowQuickFiltersControl = false
                             if (shouldShowQuickFiltersControl) {
                                 val activeSavedFilter = uiState.activeCategoryFilter
                                 val filterSubtitle = when {

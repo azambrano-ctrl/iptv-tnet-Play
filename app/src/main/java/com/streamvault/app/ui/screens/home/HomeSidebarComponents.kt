@@ -311,70 +311,44 @@ internal fun CategoryItem(
         scale = ClickableSurfaceDefaults.scale(focusedScale = 1f),
         shape = ClickableSurfaceDefaults.shape(RoundedCornerShape(10.dp)),
         colors = ClickableSurfaceDefaults.colors(
-            containerColor = if (isSelected) Primary.copy(alpha = 0.15f) else Color.Transparent,
-            focusedContainerColor = SurfaceHighlight.copy(alpha = 0.82f),
-            contentColor = if (isSelected) Primary else OnSurface
+            containerColor = if (isSelected) Color(0xFF3B82F6).copy(alpha = 0.88f) else Color.Transparent,
+            focusedContainerColor = if (isSelected) Color(0xFF3B82F6) else Color.White.copy(alpha = 0.10f),
+            contentColor = OnSurface
         ),
         border = ClickableSurfaceDefaults.border(
             focusedBorder = Border(
-                border = BorderStroke(3.dp, FocusBorder),
+                border = BorderStroke(0.dp, Color.Transparent),
                 shape = RoundedCornerShape(10.dp)
             )
         )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 11.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                modifier = androidx.compose.ui.Modifier
-                    .padding(start = 4.dp)
-                    .width(3.dp)
-                    .height(22.dp)
-                    .clip(RoundedCornerShape(2.dp))
-                    .background(
-                        when {
-                            isSelected -> Primary
-                            isFocused -> FocusBorder
-                            else -> Color.Transparent
-                        }
-                    )
+            if (isPinned) {
+                PinnedCategoryGlyph(
+                    tint = if (isSelected || isFocused) OnBackground else OnSurfaceDim,
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+            Text(
+                text = category.name,
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = if (isSelected || isFocused) OnBackground else OnSurface,
+                modifier = Modifier.weight(1f)
             )
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 9.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                if (isPinned) {
-                    PinnedCategoryGlyph(
-                        tint = if (isFocused) OnBackground else if (isSelected) Primary else OnSurfaceDim,
-                        modifier = Modifier.padding(end = 8.dp)
-                    )
-                }
+            if (isLocked) {
                 Text(
-                    text = category.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = if (isFocused) OnBackground else if (isSelected) Primary else OnSurface,
-                    modifier = Modifier.weight(1f)
+                    text = stringResource(R.string.home_locked_short),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = if (isSelected || isFocused) OnBackground else OnSurfaceDim,
+                    modifier = Modifier.padding(start = 8.dp)
                 )
-                Text(
-                    text = category.count.toString(),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = if (isFocused) OnBackground else OnSurfaceDim,
-                    modifier = Modifier.padding(start = 10.dp)
-                )
-                if (isLocked) {
-                    Text(
-                        text = stringResource(R.string.home_locked_short),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isFocused) OnBackground else OnSurfaceDim,
-                        modifier = Modifier.padding(start = 8.dp)
-                    )
-                }
             }
         }
     }
