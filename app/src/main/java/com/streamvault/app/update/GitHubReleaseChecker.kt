@@ -1,4 +1,4 @@
-package com.streamvault.app.update
+﻿package com.streamvault.app.update
 
 import com.streamvault.domain.model.Result
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +37,7 @@ class GitHubReleaseChecker @Inject constructor(
             val request = Request.Builder()
                 .url(RELEASES_LATEST_URL)
                 .header("Accept", "application/vnd.github+json")
-                .header("User-Agent", "StreamVault-Update-Checker")
+                .header("User-Agent", "TNET-Play-Update-Checker")
                 .build()
 
             okHttpClient.newCall(request).execute().use { response ->
