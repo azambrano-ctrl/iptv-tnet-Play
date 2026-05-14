@@ -11,7 +11,7 @@ import kotlinx.coroutines.sync.withLock
 
 internal class XtreamAdaptiveSyncPolicy {
     private companion object {
-        const val MAX_SEGMENTED_CONCURRENCY = 4
+        const val MAX_SEGMENTED_CONCURRENCY = 2
     }
 
     enum class Stage(val timeoutMs: Long?) {
@@ -213,8 +213,8 @@ internal class XtreamAdaptiveSyncPolicy {
         }
         val health = providerHealth[providerId] ?: ProviderHealth()
         val baseSpacingMs = when (stage) {
-            Stage.CATEGORY -> 250L
-            Stage.PAGED -> 180L
+            Stage.CATEGORY -> 600L
+            Stage.PAGED -> 400L
             else -> 0L
         }
         val stressSpacingMs = when {
