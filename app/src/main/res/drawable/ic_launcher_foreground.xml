@@ -4,8 +4,13 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <!-- White play button centered in safe zone (27dp–81dp) -->
+    <!-- Bold "T" letter centered in safe zone (27dp–81dp) -->
+    <!-- Horizontal bar of T -->
     <path
         android:fillColor="#FFFFFFFF"
-        android:pathData="M43,34 L43,74 L72,54 Z"/>
+        android:pathData="M28,30 L80,30 L80,42 L28,42 Z"/>
+    <!-- Vertical bar of T -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M47,42 L61,42 L61,82 L47,82 Z"/>
 </vector>
