@@ -55,6 +55,7 @@ import com.streamvault.app.update.GitHubReleaseInfo
 import com.streamvault.domain.util.AdultContentVisibilityPolicy
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
@@ -74,6 +75,7 @@ class DashboardViewModel @Inject constructor(
     private val getCustomCategories: GetCustomCategories,
     private val syncManager: SyncManager,
     private val appUpdateInstaller: AppUpdateInstaller,
+    private val gitHubReleaseChecker: com.streamvault.app.update.GitHubReleaseChecker,
     private val recordingManager: RecordingManager
 ) : ViewModel() {
     private companion object {
@@ -97,6 +99,7 @@ class DashboardViewModel @Inject constructor(
     val scheduledChannelIds: StateFlow<Set<Long>> = _scheduledChannelIds.asStateFlow()
 
     init {
+        viewModelScope.launch { autoCheckForUpdates() }
         viewModelScope.launch {
             recordingManager.observeRecordingItems().collect { items ->
                 _recordingChannelIds.value = items
@@ -560,6 +563,29 @@ class DashboardViewModel @Inject constructor(
             }
         }
         return 0
+    }
+
+    private suspend fun autoCheckForUpdates() {
+        val lastChecked = preferencesRepository.lastAppUpdateCheckTimestamp.first()
+        val checkIntervalMs = 6L * 60L * 60L * 1000L // cada 6 horas
+        val now = System.currentTimeMillis()
+        if (lastChecked != null && now - lastChecked < checkIntervalMs) return
+
+        when (val result = gitHubReleaseChecker.fetchLatestRelease()) {
+            is com.streamvault.domain.model.Result.Success -> {
+                val release = result.data
+                preferencesRepository.setCachedAppUpdateRelease(
+                    versionName = release.versionName,
+                    versionCode = release.versionCode,
+                    releaseUrl = release.releaseUrl,
+                    downloadUrl = release.downloadUrl,
+                    releaseNotes = release.releaseNotes,
+                    publishedAt = release.publishedAt
+                )
+                preferencesRepository.setLastAppUpdateCheckTimestamp(now)
+            }
+            else -> Unit
+        }
     }
 
     fun startUpdateDownload() {
